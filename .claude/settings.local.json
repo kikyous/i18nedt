@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod init:*)",
+      "Bash(go build:*)",
+      "Bash(./bin/i18nedt:*)",
+      "Bash(go run:*)",
+      "Bash(EDITOR=echo go run:*)",
+      "Bash(EDITOR=echo ./bin/i18nedt:*)",
+      "Bash(go test:*)",
+      "Bash(make:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
