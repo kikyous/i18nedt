@@ -171,7 +171,7 @@ func TestExpandKeys(t *testing.T) {
 				"welcome": "Welcome",
 			},
 			keys:     []string{"nonexistent", "another.nonexistent"},
-			expected: []string{},
+			expected: []string{"another.nonexistent", "nonexistent"},
 		},
 		{
 			name: "deeply nested expansion",
@@ -195,7 +195,7 @@ func TestExpandKeys(t *testing.T) {
 			name: "empty data",
 			data: map[string]interface{}{},
 			keys: []string{"home", "welcome"},
-			expected: []string{},
+			expected: []string{"home", "welcome"},
 		},
 	}
 
@@ -278,6 +278,11 @@ func TestExpandKeysRealWorld(t *testing.T) {
 			name:     "all individual keys - no expansion",
 			keys:     []string{"simple", "home.welcome"},
 			expected: []string{"home.welcome", "simple"},
+		},
+		{
+			name:     "mix of existing and non-existing keys",
+			keys:     []string{"simple", "nonexistent.key", "home"},
+			expected: []string{"home.start", "home.welcome", "nonexistent.key", "simple"},
 		},
 	}
 

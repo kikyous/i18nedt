@@ -191,10 +191,21 @@ func ExpandKeys(data map[string]interface{}, keys []string) []string {
 
 	for _, key := range keys {
 		childKeys := GetKeysUnderPrefix(data, key)
-		for _, childKey := range childKeys {
-			if !seenKeys[childKey] {
-				expandedKeys = append(expandedKeys, childKey)
-				seenKeys[childKey] = true
+
+		// If the key doesn't exist in the data (no child keys found),
+		// include the key itself to allow editing new keys
+		if len(childKeys) == 0 {
+			if !seenKeys[key] {
+				expandedKeys = append(expandedKeys, key)
+				seenKeys[key] = true
+			}
+		} else {
+			// Key exists, include all its child keys
+			for _, childKey := range childKeys {
+				if !seenKeys[childKey] {
+					expandedKeys = append(expandedKeys, childKey)
+					seenKeys[childKey] = true
+				}
 			}
 		}
 	}
