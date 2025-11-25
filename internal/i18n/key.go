@@ -3,6 +3,7 @@ package i18n
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -198,6 +199,8 @@ func ExpandKeys(data map[string]interface{}, keys []string) []string {
 		}
 	}
 
+	// Sort keys to ensure stable order
+	sort.Strings(expandedKeys)
 	return expandedKeys
 }
 
