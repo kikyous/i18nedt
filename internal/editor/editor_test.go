@@ -5,6 +5,76 @@ import (
 	"testing"
 )
 
+func TestParseEditorCommand(t *testing.T) {
+	tests := []struct {
+		name      string
+		editorStr string
+		exec      string
+		args      []string
+	}{
+		{
+			name:      "simple editor",
+			editorStr: "vim",
+			exec:      "vim",
+			args:      []string{},
+		},
+		{
+			name:      "editor with single argument",
+			editorStr: "code --wait",
+			exec:      "code",
+			args:      []string{"--wait"},
+		},
+		{
+			name:      "editor with multiple arguments",
+			editorStr: "emacs -nw +1",
+			exec:      "emacs",
+			args:      []string{"-nw", "+1"},
+		},
+		{
+			name:      "editor with spaces in path",
+			editorStr: "/usr/bin/vim",
+			exec:      "/usr/bin/vim",
+			args:      []string{},
+		},
+		{
+			name:      "empty string",
+			editorStr: "",
+			exec:      "",
+			args:      nil,
+		},
+		{
+			name:      "string with extra spaces",
+			editorStr: "  code   --wait  ",
+			exec:      "code",
+			args:      []string{"--wait"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exec, args := parseEditorCommand(tt.editorStr)
+			if exec != tt.exec {
+				t.Errorf("parseEditorCommand() exec = %v, want %v", exec, tt.exec)
+			}
+			if !equalStringSlices(args, tt.args) {
+				t.Errorf("parseEditorCommand() args = %v, want %v", args, tt.args)
+			}
+		})
+	}
+}
+
+func equalStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestValidateEditor(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -122,6 +192,11 @@ func TestOpenEditor(t *testing.T) {
 		{
 			name:    "valid editor with cat",
 			editor:  "cat",
+			wantErr: false,
+		},
+		{
+			name:    "editor with arguments (VS Code)",
+			editor:  "code --wait",
 			wantErr: false,
 		},
 		{

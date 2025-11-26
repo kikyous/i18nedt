@@ -4,7 +4,17 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
+
+// parseEditorCommand splits an editor command string into the executable name and arguments
+func parseEditorCommand(editorStr string) (string, []string) {
+	parts := strings.Fields(editorStr)
+	if len(parts) == 0 {
+		return "", nil
+	}
+	return parts[0], parts[1:]
+}
 
 // OpenEditor opens the system editor with the specified file
 func OpenEditor(filePath, editorName string) error {
@@ -12,13 +22,17 @@ func OpenEditor(filePath, editorName string) error {
 		return fmt.Errorf("editor name cannot be empty")
 	}
 
+	// Parse editor command to separate executable from arguments
+	executable, args := parseEditorCommand(editorName)
+
 	// Check if editor exists
-	if _, err := exec.LookPath(editorName); err != nil {
-		return fmt.Errorf("editor '%s' not found: %w", editorName, err)
+	if _, err := exec.LookPath(executable); err != nil {
+		return fmt.Errorf("editor '%s' not found: %w", executable, err)
 	}
 
-	// Create command to run editor
-	cmd := exec.Command(editorName, filePath)
+	// Create command to run editor with arguments + file path
+	allArgs := append(args, filePath)
+	cmd := exec.Command(executable, allArgs...)
 
 	// Set up standard I/O to connect with terminal
 	cmd.Stdin = os.Stdin
@@ -39,8 +53,11 @@ func ValidateEditor(editorName string) error {
 		return fmt.Errorf("editor name cannot be empty")
 	}
 
-	if _, err := exec.LookPath(editorName); err != nil {
-		return fmt.Errorf("editor '%s' not found in PATH: %w", editorName, err)
+	// Parse editor command to separate executable from arguments
+	executable, _ := parseEditorCommand(editorName)
+
+	if _, err := exec.LookPath(executable); err != nil {
+		return fmt.Errorf("editor '%s' not found in PATH: %w", executable, err)
 	}
 
 	return nil

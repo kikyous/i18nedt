@@ -114,9 +114,15 @@ i18nedt expects JSON files with this structure:
 The tool uses the `$EDITOR` environment variable to determine which editor to use. If not set, it defaults to `vim`.
 
 ```bash
-export EDITOR=nano    # Use nano instead of vim
-export EDITOR=code    # Use VS Code
-export EDITOR=emacs   # Use Emacs
+export EDITOR=nano            # Use nano instead of vim
+export EDITOR="code --wait"   # Use VS Code
+export EDITOR="zed --wait"    # Use VS Code
+export EDITOR=emacs           # Use Emacs
+```
+
+or set it inline:
+```bash
+EDITOR="zed --wait" i18nedt locales/{zh-CN,zh-TW,en-US}.json -k test
 ```
 
 ## File Path Patterns
@@ -129,6 +135,9 @@ i18nedt src/locales/{zh-CN,zh-TW,en-US}.json -k welcome
 
 # Using wildcards
 i18nedt src/locales/*.json -k welcome
+
+# Deep wildcards
+i18nedt src/locales/**/*/common.json -k welcome
 
 # Specific files
 i18nedt locales/zh-CN.json locales/en-US.json -k welcome
