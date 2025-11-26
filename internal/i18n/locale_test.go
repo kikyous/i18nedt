@@ -3,7 +3,7 @@ package i18n
 import (
 	"testing"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 func TestParseLocaleFromPath(t *testing.T) {

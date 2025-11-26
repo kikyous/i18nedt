@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // ParseFlags parses command line arguments and returns a Config

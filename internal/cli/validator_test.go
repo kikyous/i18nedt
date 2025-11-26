@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 func TestValidateConfig(t *testing.T) {

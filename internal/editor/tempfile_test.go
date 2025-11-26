@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chen/i18nedt/internal/i18n"
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/internal/i18n"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 func TestCreateTempFile(t *testing.T) {

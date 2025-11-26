@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // CreateTempDir creates a temporary directory for testing

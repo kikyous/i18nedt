@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chen/i18nedt/internal/i18n"
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/internal/i18n"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // CreateTempFile creates a temporary file for editing

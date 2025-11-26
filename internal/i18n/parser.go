@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // LoadFile loads and parses an i18n JSON file

@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/chen/i18nedt/internal/cli"
-	"github.com/chen/i18nedt/internal/editor"
-	"github.com/chen/i18nedt/internal/i18n"
+	"github.com/kikyous/i18nedt/internal/cli"
+	"github.com/kikyous/i18nedt/internal/editor"
+	"github.com/kikyous/i18nedt/internal/i18n"
 )
 
 func main() {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // ParseLocaleFromPath extracts locale code from file path

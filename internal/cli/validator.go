@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/chen/i18nedt/pkg/types"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // ValidateConfig validates the configuration and returns any errors
