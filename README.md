@@ -116,7 +116,7 @@ The tool uses the `$EDITOR` environment variable to determine which editor to us
 ```bash
 export EDITOR=nano            # Use nano instead of vim
 export EDITOR="code --wait"   # Use VS Code
-export EDITOR="zed --wait"    # Use VS Code
+export EDITOR="zed --wait"    # Use Zed
 export EDITOR=emacs           # Use Emacs
 ```
 
