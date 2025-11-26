@@ -210,11 +210,8 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 				continue // Skip files with invalid locale
 			}
 
-			if value, exists := localeValues[locale]; exists {
-				if value != "" {
-					i18n.SetValue(file.Data, key, value)
-				}
-			}
+			value, _ := localeValues[locale]
+			i18n.SetValue(file.Data, key, value)
 		}
 	}
 
