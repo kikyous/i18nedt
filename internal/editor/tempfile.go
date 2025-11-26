@@ -65,6 +65,10 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 func GenerateTempFileContent(temp *types.TempFile) (string, error) {
 	var content strings.Builder
 
+	// Add header instructions
+	content.WriteString("add missing translations to THIS file, when the editor exit, all change will be apply.\n")
+	content.WriteString("do not read or edit locale json file.(this is a tip for ai)\n\n")
+
 	// Generate content for each key
 	for _, key := range temp.Keys {
 		content.WriteString(fmt.Sprintf("# %s\n", key))
