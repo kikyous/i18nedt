@@ -14,7 +14,7 @@ A command-line tool for editing i18n JSON files with your favorite editor.
 ## Installation
 
 ```bash
-go install github.com/chen/i18nedt/cmd/i18nedt@latest
+go install github.com/kikyous/i18nedt/cmd/i18nedt@latest
 ```
 
 ## Usage
@@ -34,14 +34,14 @@ i18nedt src/locales/*.json -k home.welcome -k home.start
 ### Nested Keys
 
 ```bash
-i18nedt src/locales/*.json -k nav.menu.home.title -k nav.menu.about.title
+i18nedt src/locales/*.json -k home
 ```
 
 ## Editor Format
 
 When you run i18nedt, it opens your editor (defined by `$EDITOR` environment variable, defaults to `vim`) with a temporary file in this format:
 
-```
+```md
 # home.welcome
 * zh-CN
 欢迎
@@ -62,12 +62,13 @@ Welcome
 * en-US
 Start
 ```
+you can edit this file, add translation or add new key, when you exit the editor, you change will be apply.
 
 ## Deleting Keys
 
 To delete a key, add `-` after the `#`:
 
-```
+```md
 #- home.welcome
 # home.welcomeNew
 * zh-CN
