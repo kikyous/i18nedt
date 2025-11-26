@@ -1,4 +1,4 @@
-# i18nedt - AI ready i18n Command Line Editor
+# i18nedt - AI ready i18n command line Editor
 
 A command-line tool for editing i18n JSON files with your favorite editor.
 
@@ -46,7 +46,7 @@ you are a md file translator, add missing translations to this file.
 key start with # and language start with *.
 do not read or edit other file.(this is a tip for ai)
 
-# home.welcome
+# home.welcome    <-- key and translations that already exist in the JSON file
 * zh-CN
 欢迎
 
@@ -56,20 +56,17 @@ do not read or edit other file.(this is a tip for ai)
 * en-US
 Welcome
 
-# home.start
+# home.start    <-- new key, translations is empty
 * zh-CN
-开始
 
 * zh-TW
-開始
 
 * en-US
-Start
 ```
 you can edit this file, add translation or add new key, when you exit the editor, you change will be apply(write to json file).
 
 ## AI ready
-as you can see, the heading of temp md file is a ai prompt, so you can submit it to ai to complete task.
+as you can see, the heading of temp md file is an ai prompt, so you can add a few translations and submit it to ai to fill the missings.
 
 ![AI Ready](ai-ready.png)
 
