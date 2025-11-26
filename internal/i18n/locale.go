@@ -17,10 +17,12 @@ func ParseLocaleFromPath(filePath string) (string, error) {
 
 	// Common patterns for locale extraction
 	patterns := []string{
-		`^([a-z]{2}-[A-Z]{2})$`,     // zh-CN, en-US
-		`^([a-z]{2})$`,              // en, zh
-		`^([a-z]{2}-[A-Z]{2})\..*`,  // zh-CN.json, en-US.json
-		`^([a-z]{2})\..*`,           // en.json, zh.json
+		`^([a-z]{2}-[A-Z]{2})$`,      // zh-CN, en-US
+		`^([a-z]{2}-[A-Z][a-z]+)$`,    // zh-Hans, zh-Hant
+		`^([a-z]{2})$`,               // en, zh
+		`^([a-z]{2}-[A-Z]{2})\..*`,   // zh-CN.json, en-US.json
+		`^([a-z]{2}-[A-Z][a-z]+)\..*`, // zh-Hans.json, zh-Hant.json
+		`^([a-z]{2})\..*`,            // en.json, zh.json
 	}
 
 	for _, pattern := range patterns {
