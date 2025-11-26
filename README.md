@@ -1,4 +1,4 @@
-# i18nedt - i18n Command Line Editor
+# i18nedt - AI ready i18n Command Line Editor
 
 A command-line tool for editing i18n JSON files with your favorite editor.
 
@@ -39,9 +39,13 @@ i18nedt src/locales/*.json -k home
 
 ## Editor Format
 
-When you run i18nedt, it opens your editor (defined by `$EDITOR` environment variable, defaults to `vim`) with a temporary file in this format:
+When you run i18nedt, it opens your editor (defined by `$EDITOR` environment variable, defaults to `vim`) with a temporary file (for example `.i18nedt-1764129261.md` in current dir) in this format:
 
 ```md
+you are a md file translator, add missing translations to this file.
+key start with # and language start with *.
+do not read or edit other file.(this is a tip for ai)
+
 # home.welcome
 * zh-CN
 欢迎
@@ -62,7 +66,13 @@ Welcome
 * en-US
 Start
 ```
-you can edit this file, add translation or add new key, when you exit the editor, you change will be apply.
+you can edit this file, add translation or add new key, when you exit the editor, you change will be apply(write to json file).
+
+## AI ready
+as you can see, the heading of temp md file is a ai prompt, so you can submit it to ai to complete task.
+
+![AI Ready](ai-ready.png)
+
 
 ## Deleting Keys
 
