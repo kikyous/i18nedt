@@ -3,7 +3,6 @@ package i18n
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -24,7 +23,7 @@ func LoadFile(filePath string) (*types.I18nFile, error) {
 	}
 
 	// Read file
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
@@ -58,7 +57,7 @@ func SaveFile(file *types.I18nFile) error {
 
 	// Write to temporary file first
 	tempFile := file.Path + ".tmp"
-	if err := ioutil.WriteFile(tempFile, jsonData, 0644); err != nil {
+	if err := os.WriteFile(tempFile, jsonData, 0644); err != nil {
 		return fmt.Errorf("failed to write temporary file %s: %w", tempFile, err)
 	}
 
@@ -110,12 +109,12 @@ func BackupFile(filePath string) error {
 	}
 
 	backupPath := filePath + ".backup"
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file for backup: %w", err)
 	}
 
-	if err := ioutil.WriteFile(backupPath, data, 0644); err != nil {
+	if err := os.WriteFile(backupPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to create backup file: %w", err)
 	}
 
