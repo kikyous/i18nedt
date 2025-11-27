@@ -69,16 +69,14 @@ func TestI18nFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			file := &I18nFile{
 				Path: tt.path,
-				Data: make(map[string]interface{}),
+				Data: "",
 			}
 
 			if file.Path != tt.path {
 				t.Errorf("I18nFile.Path = %v, want %v", file.Path, tt.path)
 			}
 
-			if file.Data == nil {
-				t.Error("I18nFile.Data should not be nil")
-			}
+			// Empty string is fine for I18nFile.Data - it represents empty JSON
 		})
 	}
 }
@@ -91,7 +89,7 @@ func TestTempFile(t *testing.T) {
 		Path:    "/tmp/test.txt",
 		Keys:    keys,
 		Locales: locales,
-		Content: make(map[string]map[string]string),
+		Content: make(map[string]map[string]*Value),
 		Deletes: []string{},
 	}
 

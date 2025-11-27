@@ -13,12 +13,8 @@ import (
 
 func TestCreateTempFile(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: map[string]interface{}{
-			"welcome": "欢迎",
-		}},
-		{Path: "en-US.json", Data: map[string]interface{}{
-			"welcome": "Welcome",
-		}},
+		{Path: "zh-CN.json", Data: `{"welcome": "欢迎"}`},
+		{Path: "en-US.json", Data: `{"welcome": "Welcome"}`},
 	}
 
 	keys := []string{"home.welcome", "nav.home"}
@@ -70,14 +66,14 @@ func TestGenerateTempFileContent(t *testing.T) {
 	temp := &types.TempFile{
 		Keys:    []string{"home.welcome", "nav.home"},
 		Locales: []string{"zh-CN", "en-US"},
-		Content: map[string]map[string]string{
+		Content: map[string]map[string]*types.Value{
 			"home.welcome": {
-				"zh-CN": "欢迎",
-				"en-US": "Welcome",
+				"zh-CN": types.NewStringValue("欢迎"),
+				"en-US": types.NewStringValue("Welcome"),
 			},
 			"nav.home": {
-				"zh-CN": "首页",
-				"en-US": "Home",
+				"zh-CN": types.NewStringValue("首页"),
+				"en-US": types.NewStringValue("Home"),
 			},
 		},
 	}
@@ -100,7 +96,7 @@ func TestGenerateTempFileContent(t *testing.T) {
 	}
 
 	for _, part := range expectedParts {
-		if !strings.Contains(content, part) {
+		if !strings.Contains(string(content), part) {
 			t.Errorf("GenerateTempFileContent() missing expected part: %s", part)
 		}
 	}
@@ -111,9 +107,9 @@ func TestWriteTempFile(t *testing.T) {
 		Path:    "/tmp/test-i18nedt.txt",
 		Keys:    []string{"home.welcome"},
 		Locales: []string{"zh-CN"},
-		Content: map[string]map[string]string{
+		Content: map[string]map[string]*types.Value{
 			"home.welcome": {
-				"zh-CN": "欢迎",
+				"zh-CN": types.NewStringValue("欢迎"),
 			},
 		},
 	}
@@ -158,33 +154,27 @@ Welcome
 * en-US
 Home`
 
-	temp := &types.TempFile{
-		Keys:    []string{"home.welcome", "nav.home"},
-		Locales: []string{"zh-CN", "en-US"},
-		Content: make(map[string]map[string]string),
-		Deletes: []string{},
-	}
-
-	err := ParseTempFileContent(content, temp)
+	locales := []string{"zh-CN", "en-US"}
+	temp, err := ParseTempFileContent(content, locales)
 	if err != nil {
 		t.Fatalf("ParseTempFileContent() error = %v", err)
 	}
 
 	// Verify parsed content
-	if temp.Content["home.welcome"]["zh-CN"] != "欢迎" {
-		t.Errorf("ParseTempFileContent() zh-CN welcome = %v, want %v", temp.Content["home.welcome"]["zh-CN"], "欢迎")
+	if temp.Content["home.welcome"]["zh-CN"].Value != "欢迎" {
+		t.Errorf("ParseTempFileContent() zh-CN welcome = %v, want %v", temp.Content["home.welcome"]["zh-CN"].Value, "欢迎")
 	}
 
-	if temp.Content["home.welcome"]["en-US"] != "Welcome" {
-		t.Errorf("ParseTempFileContent() en-US welcome = %v, want %v", temp.Content["home.welcome"]["en-US"], "Welcome")
+	if temp.Content["home.welcome"]["en-US"].Value != "Welcome" {
+		t.Errorf("ParseTempFileContent() en-US welcome = %v, want %v", temp.Content["home.welcome"]["en-US"].Value, "Welcome")
 	}
 
-	if temp.Content["nav.home"]["zh-CN"] != "首页" {
-		t.Errorf("ParseTempFileContent() zh-CN home = %v, want %v", temp.Content["nav.home"]["zh-CN"], "首页")
+	if temp.Content["nav.home"]["zh-CN"].Value != "首页" {
+		t.Errorf("ParseTempFileContent() zh-CN home = %v, want %v", temp.Content["nav.home"]["zh-CN"].Value, "首页")
 	}
 
-	if temp.Content["nav.home"]["en-US"] != "Home" {
-		t.Errorf("ParseTempFileContent() en-US home = %v, want %v", temp.Content["nav.home"]["en-US"], "Home")
+	if temp.Content["nav.home"]["en-US"].Value != "Home" {
+		t.Errorf("ParseTempFileContent() en-US home = %v, want %v", temp.Content["nav.home"]["en-US"].Value, "Home")
 	}
 }
 
@@ -204,14 +194,8 @@ New key
 * en-US
 Existing value`
 
-	temp := &types.TempFile{
-		Keys:    []string{"new.key", "existing.key"},
-		Locales: []string{"zh-CN", "en-US"},
-		Content: make(map[string]map[string]string),
-		Deletes: []string{},
-	}
-
-	err := ParseTempFileContent(content, temp)
+	locales := []string{"zh-CN", "en-US"}
+	temp, err := ParseTempFileContent(content, locales)
 	if err != nil {
 		t.Fatalf("ParseTempFileContent() error = %v", err)
 	}
@@ -226,12 +210,12 @@ Existing value`
 	}
 
 	// Verify new content
-	if temp.Content["new.key"]["zh-CN"] != "新的键" {
-		t.Errorf("ParseTempFileContent() new key zh-CN = %v, want %v", temp.Content["new.key"]["zh-CN"], "新的键")
+	if temp.Content["new.key"]["zh-CN"].Value != "新的键" {
+		t.Errorf("ParseTempFileContent() new key zh-CN = %v, want %v", temp.Content["new.key"]["zh-CN"].Value, "新的键")
 	}
 
-	if temp.Content["existing.key"]["en-US"] != "Existing value" {
-		t.Errorf("ParseTempFileContent() existing key en-US = %v, want %v", temp.Content["existing.key"]["en-US"], "Existing value")
+	if temp.Content["existing.key"]["en-US"].Value != "Existing value" {
+		t.Errorf("ParseTempFileContent() existing key en-US = %v, want %v", temp.Content["existing.key"]["en-US"].Value, "Existing value")
 	}
 }
 
@@ -261,7 +245,7 @@ Welcome`
 		Path:    tmpFile.Name(),
 		Keys:    []string{"home.welcome"},
 		Locales: []string{"zh-CN", "en-US"},
-		Content: make(map[string]map[string]string),
+		Content: make(map[string]map[string]*types.Value),
 		Deletes: []string{},
 	}
 
@@ -271,8 +255,8 @@ Welcome`
 	}
 
 	// Verify parsed content
-	if temp.Content["home.welcome"]["zh-CN"] != "欢迎" {
-		t.Errorf("ReadTempFile() zh-CN welcome = %v, want %v", temp.Content["home.welcome"]["zh-CN"], "欢迎")
+	if temp.Content["home.welcome"]["zh-CN"].Value != "欢迎" {
+		t.Errorf("ReadTempFile() zh-CN welcome = %v, want %v", temp.Content["home.welcome"]["zh-CN"].Value, "欢迎")
 	}
 }
 
@@ -306,19 +290,15 @@ func TestCleanupTempFile(t *testing.T) {
 
 func TestApplyChanges(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: map[string]interface{}{
-			"old": "旧值",
-		}},
-		{Path: "en-US.json", Data: map[string]interface{}{
-			"old": "Old value",
-		}},
+		{Path: "zh-CN.json", Data: `{"old": "旧值"}`},
+		{Path: "en-US.json", Data: `{"old": "Old value"}`},
 	}
 
 	temp := &types.TempFile{
-		Content: map[string]map[string]string{
+		Content: map[string]map[string]*types.Value{
 			"new": {
-				"zh-CN": "新值",
-				"en-US": "New value",
+				"zh-CN": types.NewStringValue("新值"),
+				"en-US": types.NewStringValue("New value"),
 			},
 		},
 		Deletes: []string{"old"},
@@ -330,25 +310,25 @@ func TestApplyChanges(t *testing.T) {
 	}
 
 	// Verify old keys were deleted
-	if value, exists := i18n.GetValue(files[0].Data, "old"); exists {
+	if value, err := i18n.GetValue(files[0].Data, "old"); err == nil && value != "" {
 		t.Errorf("ApplyChanges() old key still exists in zh-CN: %v", value)
 	}
 
 	// Verify new keys were added
-	if value, exists := i18n.GetValue(files[0].Data, "new"); !exists || value != "新值" {
+	if value, err := i18n.GetValue(files[0].Data, "new"); err != nil || value != "新值" {
 		t.Errorf("ApplyChanges() new key in zh-CN = %v, want %v", value, "新值")
 	}
 
-	if value, exists := i18n.GetValue(files[1].Data, "new"); !exists || value != "New value" {
+	if value, err := i18n.GetValue(files[1].Data, "new"); err != nil || value != "New value" {
 		t.Errorf("ApplyChanges() new key in en-US = %v, want %v", value, "New value")
 	}
 }
 
 func TestGetFilePaths(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: map[string]interface{}{}},
-		{Path: "en-US.json", Data: map[string]interface{}{}},
-		{Path: "ja-JP.json", Data: map[string]interface{}{}},
+		{Path: "zh-CN.json", Data: "{}"},
+		{Path: "en-US.json", Data: "{}"},
+		{Path: "ja-JP.json", Data: "{}"},
 	}
 
 	paths := getFilePaths(files)

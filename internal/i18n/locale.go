@@ -58,7 +58,7 @@ func CreateI18nFiles(filePaths []string) ([]*types.I18nFile, error) {
 	for _, filePath := range filePaths {
 		file := &types.I18nFile{
 			Path: filePath,
-			Data: make(map[string]interface{}),
+			Data: "{}", // Default empty JSON object
 		}
 		files = append(files, file)
 	}

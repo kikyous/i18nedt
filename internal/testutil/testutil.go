@@ -51,7 +51,7 @@ func CreateTestFiles(t *testing.T, tmpDir string, files map[string]string) []*ty
 
 		i18nFile := &types.I18nFile{
 			Path: filePath,
-			Data: make(map[string]interface{}),
+			Data: content,
 		}
 		i18nFiles = append(i18nFiles, i18nFile)
 	}

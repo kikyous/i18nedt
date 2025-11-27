@@ -10,6 +10,18 @@ import (
 	"github.com/kikyous/i18nedt/pkg/types"
 )
 
+// Helper function to convert map to JSON string
+func mapToJSON(data map[string]interface{}) string {
+	if data == nil {
+		return "{}"
+	}
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return "{}"
+	}
+	return string(jsonBytes)
+}
+
 func TestLoadFile(t *testing.T) {
 	// Create temporary directory for test files
 	tmpDir := t.TempDir()
@@ -92,8 +104,14 @@ func TestLoadFile(t *testing.T) {
 				t.Errorf("LoadFile().Path = %v, want %v", file.Path, filePath)
 			}
 
-			if !equalMaps(file.Data, tt.wantData) {
-				t.Errorf("LoadFile().Data = %v, want %v", file.Data, tt.wantData)
+			// Parse file.Data as JSON and compare with expected data
+			var fileData map[string]interface{}
+			if err := json.Unmarshal([]byte(file.Data), &fileData); err != nil {
+				t.Errorf("LoadFile().Data is not valid JSON: %v", err)
+				return
+			}
+			if !equalMaps(fileData, tt.wantData) {
+				t.Errorf("LoadFile().Data = %v, want %v", fileData, tt.wantData)
 			}
 		})
 	}
@@ -112,9 +130,7 @@ func TestSaveFile(t *testing.T) {
 			name: "save simple data",
 			file: &types.I18nFile{
 				Path: filepath.Join(tmpDir, "simple.json"),
-				Data: map[string]interface{}{
-					"welcome": "Welcome",
-				},
+				Data: `{"welcome": "Welcome"}`,
 			},
 			wantErr: false,
 		},
@@ -122,12 +138,12 @@ func TestSaveFile(t *testing.T) {
 			name: "save nested data",
 			file: &types.I18nFile{
 				Path: filepath.Join(tmpDir, "nested.json"),
-				Data: map[string]interface{}{
+				Data: mapToJSON(map[string]interface{}{
 					"home": map[string]interface{}{
 						"title": "Home",
 						"desc":  "Description",
 					},
-				},
+				}),
 			},
 			wantErr: false,
 		},
@@ -135,9 +151,9 @@ func TestSaveFile(t *testing.T) {
 			name: "save to non-existent directory",
 			file: &types.I18nFile{
 				Path: filepath.Join(tmpDir, "subdir", "new.json"),
-				Data: map[string]interface{}{
+				Data: mapToJSON(map[string]interface{}{
 					"test": "value",
-				},
+				}),
 			},
 			wantErr: false,
 		},
@@ -145,7 +161,7 @@ func TestSaveFile(t *testing.T) {
 			name: "save empty data",
 			file: &types.I18nFile{
 				Path: filepath.Join(tmpDir, "empty.json"),
-				Data: map[string]interface{}{},
+				Data: mapToJSON(map[string]interface{}{}),
 			},
 			wantErr: false,
 		},
@@ -181,10 +197,14 @@ func TestSaveFile(t *testing.T) {
 				return
 			}
 
-			// Clean empty maps before comparison
-			cleanedData := CleanEmptyMaps(tt.file.Data)
-			if !equalMaps(loadedData, cleanedData) {
-				t.Errorf("SaveFile() saved data = %v, want %v", loadedData, cleanedData)
+			// Parse the original file data and compare with loaded data
+			var originalData map[string]interface{}
+			if err := json.Unmarshal([]byte(tt.file.Data), &originalData); err != nil {
+				t.Errorf("Failed to parse original data: %v", err)
+				return
+			}
+			if !equalMaps(loadedData, originalData) {
+				t.Errorf("SaveFile() saved data = %v, want %v", loadedData, originalData)
 			}
 		})
 	}
@@ -197,15 +217,15 @@ func TestSaveAllFiles(t *testing.T) {
 	files := []*types.I18nFile{
 		{
 			Path: filepath.Join(tmpDir, "zh-CN.json"),
-			Data: map[string]interface{}{
+			Data: mapToJSON(map[string]interface{}{
 				"welcome": "欢迎",
-			},
+			}),
 		},
 		{
 			Path: filepath.Join(tmpDir, "en-US.json"),
-			Data: map[string]interface{}{
+			Data: mapToJSON(map[string]interface{}{
 				"welcome": "Welcome",
-			},
+			}),
 		},
 	}
 
@@ -265,13 +285,13 @@ func TestLoadAllFiles(t *testing.T) {
 
 		if i < len(testFiles) {
 			// Verify loaded data for existing files
-			if welcome, exists := GetValue(file.Data, "welcome"); !exists || welcome != "Welcome" {
+			if welcome, err := GetValue(file.Data, "welcome"); err != nil || welcome != "Welcome" {
 				t.Errorf("LoadAllFiles()[%d] incorrect data, got welcome = %v", i, welcome)
 			}
 		} else {
-			// Verify empty data for non-existent files
-			if len(file.Data) != 0 {
-				t.Errorf("LoadAllFiles()[%d] expected empty data for non-existent file", i)
+			// Verify empty data for non-existent files (should be "{}")
+			if file.Data != "{}" {
+				t.Errorf("LoadAllFiles()[%d] expected empty data for non-existent file, got %s", i, file.Data)
 			}
 		}
 	}

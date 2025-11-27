@@ -37,24 +37,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Expand keys to include all child keys for non-leaf keys
-	// Use the first file's data as reference for key expansion
-	var allData map[string]interface{}
-	if len(files) > 0 {
-		allData = files[0].Data
-	} else {
-		allData = make(map[string]interface{})
-	}
-
-	expandedKeys := i18n.ExpandKeys(allData, config.Keys)
-
-	// Report if keys were expanded
-	if len(expandedKeys) > len(config.Keys) {
-		fmt.Printf("Expanded %d key(s) to %d key(s)\n", len(config.Keys), len(expandedKeys))
-	}
-
-	// Create temporary file for editing
-	tempFile, err := editor.CreateTempFile(files, expandedKeys)
+	// Use keys directly without expansion - user explicitly specifies what to edit
+	// This is part of the refactoring to remove key expansion mechanism
+	tempFile, err := editor.CreateTempFile(files, config.Keys)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating temporary file: %v\n", err)
 		os.Exit(1)
@@ -100,14 +85,16 @@ func main() {
 	// Report summary
 	if len(tempFile.Deletes) > 0 {
 		fmt.Printf("Deleted %d keys\n", len(tempFile.Deletes))
+		for _, key := range tempFile.Deletes {
+			fmt.Printf("  %s\n", key)
+		}
 	}
 
 	updatedCount := 0
 	for _, localeValues := range tempFile.Content {
 		for _, value := range localeValues {
-			if value != "" {
+			if value.Value != "" {
 				updatedCount++
-				break
 			}
 		}
 	}

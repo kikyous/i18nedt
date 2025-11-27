@@ -57,15 +57,7 @@ func TestValidateConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "invalid key format",
-			config: &types.Config{
-				Files: []string{filepath.Join(tmpDir, "test.json")},
-				Keys:  []string{"1invalid.key"}, // starts with number
-			},
-			wantErr: true,
-		},
-		{
+			{
 			name: "empty key",
 			config: &types.Config{
 				Files: []string{filepath.Join(tmpDir, "test.json")},
@@ -171,9 +163,9 @@ func TestValidateKey(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "invalid key starting with number",
+			name:    "valid key starting with number",
 			key:     "1invalid.key",
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "invalid empty key",
@@ -181,14 +173,14 @@ func TestValidateKey(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "invalid key with space",
+			name:    "valid key with space",
 			key:     "home welcome",
-			wantErr: true,
+			wantErr: false,
 		},
 		{
-			name:    "invalid key with special chars",
+			name:    "valid key with special chars",
 			key:     "home@welcome",
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "valid deeply nested key",

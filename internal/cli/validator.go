@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/kikyous/i18nedt/pkg/types"
@@ -67,13 +66,6 @@ func validateFilePath(path string) error {
 func validateKey(key string) error {
 	if key == "" {
 		return fmt.Errorf("key cannot be empty")
-	}
-
-	// Keys can contain letters, numbers, dots, underscores, and hyphens
-	// Must start with a letter or underscore
-	validKey := regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9._-]*$`)
-	if !validKey.MatchString(key) {
-		return fmt.Errorf("key can only contain letters, numbers, dots, underscores, and hyphens, and must start with a letter or underscore")
 	}
 
 	return nil

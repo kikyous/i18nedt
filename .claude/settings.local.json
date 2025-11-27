@@ -9,7 +9,8 @@
       "Bash(EDITOR=echo ./bin/i18nedt:*)",
       "Bash(go test:*)",
       "Bash(make:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

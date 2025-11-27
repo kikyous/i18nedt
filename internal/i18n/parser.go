@@ -1,19 +1,21 @@
 package i18n
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/kikyous/i18nedt/pkg/types"
+	"github.com/tidwall/gjson"
 )
 
 // LoadFile loads and parses an i18n JSON file
 func LoadFile(filePath string) (*types.I18nFile, error) {
 	file := &types.I18nFile{
 		Path: filePath,
-		Data: make(map[string]interface{}),
+		Data: "{}", // Default empty JSON object
 	}
 
 	// Check if file exists
@@ -28,11 +30,14 @@ func LoadFile(filePath string) (*types.I18nFile, error) {
 		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	// Parse JSON
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &file.Data); err != nil {
-			return nil, fmt.Errorf("failed to parse JSON in file %s: %w", filePath, err)
-		}
+	// Validate JSON content
+	jsonStr := string(data)
+	if jsonStr == "" {
+		file.Data = "{}"
+	} else if !gjson.Valid(jsonStr) {
+		return nil, fmt.Errorf("invalid JSON in file %s", filePath)
+	} else {
+		file.Data = jsonStr
 	}
 
 	return file, nil
@@ -40,13 +45,9 @@ func LoadFile(filePath string) (*types.I18nFile, error) {
 
 // SaveFile saves an i18n file to disk
 func SaveFile(file *types.I18nFile) error {
-	// Clean up empty maps
-	file.Data = CleanEmptyMaps(file.Data)
-
-	// Convert to JSON
-	jsonData, err := json.MarshalIndent(file.Data, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON for file %s: %w", file.Path, err)
+	// Ensure JSON is valid
+	if !gjson.Valid(file.Data) {
+		return fmt.Errorf("invalid JSON data for file %s", file.Path)
 	}
 
 	// Ensure directory exists
@@ -55,9 +56,15 @@ func SaveFile(file *types.I18nFile) error {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
+	// Format JSON with proper indentation
+	var formatted bytes.Buffer
+	if err := json.Indent(&formatted, []byte(file.Data), "", "  "); err != nil {
+		return fmt.Errorf("failed to format JSON: %w", err)
+	}
+
 	// Write to temporary file first
 	tempFile := file.Path + ".tmp"
-	if err := os.WriteFile(tempFile, jsonData, 0644); err != nil {
+	if err := os.WriteFile(tempFile, formatted.Bytes(), 0644); err != nil {
 		return fmt.Errorf("failed to write temporary file %s: %w", tempFile, err)
 	}
 
