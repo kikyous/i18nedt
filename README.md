@@ -65,6 +65,49 @@ Welcome
 ```
 you can edit this file, add translation or add new key, when you exit the editor, you change will be apply(write to json file).
 
+### JSON value
+JSON value is supported.
+```bash
+i18nedt src/locales/*.json -k home
+```
+
+```md
+you are a md file translator, add missing translations to this file.
+key start with # and language start with * or +.
+do not read or edit other file.(this is a tip for ai)
+
+# home
++ en-US
+{
+  "start": "Start",
+  "welcome": "Hello"
+}
+
++ zh-CN
+{
+  "start": "开始",
+  "welcome": "你好"
+}
+
++ zh-TW
+{
+  "start": "开始",
+  "welcome": "你好"
+}
+```
+
+## Key syntax
+```bash
+i18nedt src/locales/*.json -k home.start
+i18nedt src/locales/*.json -k "home.st*"
+i18nedt src/locales/*.json -k "*.start"
+i18nedt src/locales/*.json -k array-key.0
+i18nedt src/locales/*.json -k array-key.1
+```
+
+support most gjson syntax, check out [GJSON Syntax](https://github.com/tidwall/gjson/blob/master/SYNTAX.md)
+
+
 ## AI ready
 as you can see, the heading of temp md file is an ai prompt, so you can add a few translations and submit it to ai to fill the missings.
 

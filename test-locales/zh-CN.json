@@ -3,10 +3,7 @@
     "login": "登录"
   },
   "home": {
-    "login": "登录",
-    "logout": "登出",
     "start": "开始",
-    "user": "用户",
     "welcome": "你好"
   },
   "test": {

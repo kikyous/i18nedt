@@ -3,10 +3,7 @@
     "login": "Login"
   },
   "home": {
-    "login": "Login",
-    "logout": "Logout",
     "start": "Start",
-    "user": "User",
     "welcome": "Hello"
   },
   "test": {

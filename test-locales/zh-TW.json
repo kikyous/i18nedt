@@ -1,9 +1,7 @@
 {
   "home": {
-    "logout": "登出",
-    "start": "开始2",
-    "user": "用戶",
-    "welcome": "你好2"
+    "start": "开始",
+    "welcome": "你好"
   },
   "test": {
     "haha": "測試"
