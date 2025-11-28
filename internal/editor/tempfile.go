@@ -24,14 +24,9 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 
 	// Create temporary file in current directory with dot prefix
 	tempFileName := fmt.Sprintf(".i18nedt-%d.md", time.Now().Unix())
-	file, err := os.Create(tempFileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create temporary file: %w", err)
-	}
-	file.Close()
 
 	temp := &types.TempFile{
-		Path:    file.Name(),
+		Path:    tempFileName,
 		Keys:    keys,
 		Locales: locales,
 		Content: make(map[string]map[string]*types.Value),
@@ -65,12 +60,19 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 
 // GenerateTempFileContent generates the content for the temporary file
 func GenerateTempFileContent(temp *types.TempFile) ([]byte, error) {
+	return GenerateTempFileContentWithOptions(temp, false)
+}
+
+// GenerateTempFileContentWithOptions generates the content for the temporary file with options
+func GenerateTempFileContentWithOptions(temp *types.TempFile, noTips bool) ([]byte, error) {
 	var builder strings.Builder
 
 	// Add header comments
-	builder.WriteString("you are a md file translator, add missing translations to this file.\n")
-	builder.WriteString("key start with # and language start with * or +.\n")
-	builder.WriteString("do not read or edit other file.(this is a tip for ai)\n\n")
+	if !noTips {
+		builder.WriteString("you are a md file translator, add missing translations to this file.\n")
+		builder.WriteString("key start with # and language start with * or +.\n")
+		builder.WriteString("do not read or edit other file.(this is a tip for ai)\n\n")
+	}
 
 	// Sort keys for consistent output
 	keys := make([]string, 0, len(temp.Content))
@@ -121,8 +123,6 @@ func GenerateTempFileContent(temp *types.TempFile) ([]byte, error) {
 			}
 			builder.WriteString("\n")
 		}
-
-		builder.WriteString("\n")
 	}
 
 	// Add deletion markers
@@ -135,7 +135,12 @@ func GenerateTempFileContent(temp *types.TempFile) ([]byte, error) {
 
 // WriteTempFile writes the temporary file
 func WriteTempFile(temp *types.TempFile) error {
-	content, err := GenerateTempFileContent(temp)
+	return WriteTempFileWithOptions(temp, false)
+}
+
+// WriteTempFileWithOptions writes the temporary file with options
+func WriteTempFileWithOptions(temp *types.TempFile, noTips bool) error {
+	content, err := GenerateTempFileContentWithOptions(temp, noTips)
 	if err != nil {
 		return fmt.Errorf("failed to generate temp file content: %w", err)
 	}

@@ -54,6 +54,42 @@ func ParseFlags() (*types.Config, error) {
 			// Show help
 			PrintUsage()
 			os.Exit(0)
+		} else if arg == "-p" || arg == "--print" {
+			config.PrintOnly = true
+		} else if arg == "-a" || arg == "--no-tips" {
+			config.NoTips = true
+		} else if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
+			// Handle combined flags like -pa, -ap
+			flags := arg[1:]
+			hasK := false
+			for _, flag := range flags {
+				switch flag {
+				case 'p':
+					config.PrintOnly = true
+				case 'a':
+					config.NoTips = true
+				case 'k':
+					hasK = true
+				default:
+					return nil, fmt.Errorf("unknown flag: -%c", flag)
+				}
+			}
+
+			if hasK {
+				// Handle -k in combined flags
+				kIndex := strings.Index(arg, "k")
+				if kIndex == len(arg)-1 {
+					// -pk format, need to get value from next arg
+					i++
+					if i >= len(args) {
+						return nil, fmt.Errorf("-k flag requires a value")
+					}
+					keys = append(keys, args[i])
+				} else {
+					// -pkvalue format
+					keys = append(keys, arg[kIndex+1:])
+				}
+			}
 		} else if strings.HasPrefix(arg, "-") {
 			return nil, fmt.Errorf("unknown flag: %s", arg)
 		} else {
@@ -87,12 +123,17 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "Usage: i18nedt [options] files...\n\n")
 	fmt.Fprintf(os.Stderr, "Options:\n")
 	fmt.Fprintf(os.Stderr, "  -k key, --key=key     Key to edit (can be specified multiple times)\n")
+	fmt.Fprintf(os.Stderr, "  -p, --print           Print temporary file content without launching editor\n")
+	fmt.Fprintf(os.Stderr, "  -a, --no-tips         Exclude AI tips from temporary file content\n")
 	fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
 	fmt.Fprintf(os.Stderr, "Examples:\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt src/locales/{zh-CN,zh-TW,en-US}.json -k home.welcome\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -k home.welcome -k home.start src/locales/*.json\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt --key=nav.menu --key=footer src/locales/*.json\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt src/locales/*.json -k home  # -k can be anywhere\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -pa -k home src/locales/*.json  # Print content without AI tips\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -p -k home src/locales/*.json  # Print content only\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -a -k home src/locales/*.json  # No AI tips\n")
 }
 
 // expandFilePaths expands file patterns (like glob) to actual file paths

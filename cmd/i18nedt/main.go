@@ -45,6 +45,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// If print only mode, generate content and print to stdout
+	if config.PrintOnly {
+		content, err := editor.GenerateTempFileContentWithOptions(tempFile, config.NoTips)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating temporary file content: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Print(string(content))
+		return
+	}
+
 	// Ensure cleanup on exit
 	defer func() {
 		if err := editor.CleanupTempFile(tempFile); err != nil {
@@ -53,7 +64,7 @@ func main() {
 	}()
 
 	// Write initial content to temporary file
-	if err := editor.WriteTempFile(tempFile); err != nil {
+	if err := editor.WriteTempFileWithOptions(tempFile, config.NoTips); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing temporary file: %v\n", err)
 		os.Exit(1)
 	}
