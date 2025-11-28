@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run tests
+        run: make test
+
+  build:
+    name: Build
+    needs: test
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "COMMIT=$GITHUB_SHA" >> $GITHUB_OUTPUT
+          echo "DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+
+          # Determine output filename and extension
+          if [ "$GOOS" = "windows" ]; then
+            EXT=".exe"
+          else
+            EXT=""
+          fi
+
+          OUTPUT_NAME="i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}"
+
+          # Build with version info
+          go build -ldflags "-X github.com/kikyous/i18nedt/internal/cli.Version=${{ steps.version.outputs.VERSION }} -X github.com/kikyous/i18nedt/internal/cli.Commit=${{ steps.version.outputs.COMMIT }} -X github.com/kikyous/i18nedt/internal/cli.Date=${{ steps.version.outputs.DATE }}" -o "dist/$OUTPUT_NAME" cmd/i18nedt/main.go
+
+          # Create archives
+          if [ "$GOOS" = "windows" ]; then
+            cd dist && zip "../i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "$OUTPUT_NAME" && cd ..
+          else
+            tar -czf "i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" -C dist "$OUTPUT_NAME"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.*
+          retention-days: 30
+
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## i18nedt ${{ steps.version.outputs.VERSION }}
+
+            ### Downloads
+            - **Linux AMD64**: `i18nedt-linux-amd64.tar.gz`
+            - **Linux ARM64**: `i18nedt-linux-arm64.tar.gz`
+            - **macOS AMD64**: `i18nedt-darwin-amd64.tar.gz`
+            - **macOS ARM64 (Apple Silicon)**: `i18nedt-darwin-arm64.tar.gz`
+            - **Windows AMD64**: `i18nedt-windows-amd64.zip`
+
+            ### Installation
+
+            **Linux/macOS:**
+            ```bash
+            # Download and extract
+            curl -L -o i18nedt.tar.gz "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-$(uname | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/' | sed 's/arm64/arm64/').tar.gz"
+            tar -xzf i18nedt.tar.gz
+            sudo mv i18nedt /usr/local/bin/
+            ```
+
+            **Windows:**
+            ```powershell
+            # Download and extract
+            Invoke-WebRequest -Uri "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-windows-amd64.zip" -OutFile "i18nedt.zip"
+            Expand-Archive -Path "i18nedt.zip" -DestinationPath "."
+            # Add to PATH or move to desired location
+            ```
+
+            ### Usage
+
+            ```bash
+            # Edit a key across multiple locale files
+            i18nedt -k home.welcome src/locales/{zh-CN,en-US}.json
+
+            # Use specific editor
+            EDITOR=vim i18nedt -k nav.menu.title test-locales/*.json
+            ```
+
+            ### Changelog
+
+            ${{ github.event.head_commit.message }}
+          files: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -9,6 +9,13 @@ import (
 	"github.com/kikyous/i18nedt/pkg/types"
 )
 
+// Version information - will be set by build flags
+var (
+	Version = "dev"
+	Commit  = "unknown"
+	Date    = "unknown"
+)
+
 // ParseFlags parses command line arguments and returns a Config
 func ParseFlags() (*types.Config, error) {
 	config := types.NewConfig()
@@ -54,6 +61,10 @@ func ParseFlags() (*types.Config, error) {
 			// Show help
 			PrintUsage()
 			os.Exit(0)
+		} else if arg == "-v" || arg == "--version" {
+			// Show version
+			PrintVersion()
+			os.Exit(0)
 		} else if arg == "-p" || arg == "--print" {
 			config.PrintOnly = true
 		} else if arg == "-a" || arg == "--no-tips" {
@@ -68,6 +79,9 @@ func ParseFlags() (*types.Config, error) {
 					config.PrintOnly = true
 				case 'a':
 					config.NoTips = true
+				case 'v':
+					PrintVersion()
+					os.Exit(0)
 				case 'k':
 					hasK = true
 				default:
@@ -125,6 +139,7 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  -k key, --key=key     Key to edit (can be specified multiple times)\n")
 	fmt.Fprintf(os.Stderr, "  -p, --print           Print temporary file content without launching editor\n")
 	fmt.Fprintf(os.Stderr, "  -a, --no-tips         Exclude AI tips from temporary file content\n")
+	fmt.Fprintf(os.Stderr, "  -v, --version         Show version information\n")
 	fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
 	fmt.Fprintf(os.Stderr, "Examples:\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt src/locales/{zh-CN,zh-TW,en-US}.json -k home.welcome\n")
@@ -157,4 +172,15 @@ func expandFilePaths(paths []string) ([]string, error) {
 	}
 
 	return expanded, nil
+}
+
+// PrintVersion prints version information
+func PrintVersion() {
+	fmt.Printf("i18nedt version %s\n", Version)
+	if Commit != "unknown" {
+		fmt.Printf("commit: %s\n", Commit)
+	}
+	if Date != "unknown" {
+		fmt.Printf("built: %s\n", Date)
+	}
 }

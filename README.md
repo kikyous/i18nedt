@@ -13,8 +13,42 @@ A command-line tool for editing i18n JSON files with your favorite editor.
 
 ## Installation
 
+### Option 1: Download Pre-compiled Binaries
+
+Download the latest release from the [GitHub Releases page](https://github.com/kikyous/i18nedt/releases):
+
+- **Linux AMD64**: `i18nedt-linux-amd64.tar.gz`
+- **Linux ARM64**: `i18nedt-linux-arm64.tar.gz`
+- **macOS AMD64**: `i18nedt-darwin-amd64.tar.gz`
+- **macOS ARM64 (Apple Silicon)**: `i18nedt-darwin-arm64.tar.gz`
+- **Windows AMD64**: `i18nedt-windows-amd64.zip`
+
+Extract and install:
+
+```bash
+# Linux/macOS
+tar -xzf i18nedt-*-amd64.tar.gz
+sudo mv i18nedt /usr/local/bin/
+
+# Windows
+# Extract the ZIP file and add to PATH
+```
+
+### Option 2: Install from source
+
 ```bash
 go install github.com/kikyous/i18nedt/cmd/i18nedt@latest
+```
+
+### Version Information
+
+Check your installed version:
+
+```bash
+i18nedt --version
+# Output: i18nedt version v1.0.0
+#         commit: abc123...
+#         built: 2024-01-01T12:00:00Z
 ```
 
 ## Usage
