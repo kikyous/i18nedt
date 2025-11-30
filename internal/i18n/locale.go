@@ -51,31 +51,13 @@ func ParseLocaleFromPath(filePath string) (string, error) {
 	return name, nil
 }
 
-// CreateI18nFiles creates I18nFile structs from file paths
-func CreateI18nFiles(filePaths []string) ([]*types.I18nFile, error) {
-	files := make([]*types.I18nFile, 0, len(filePaths))
 
-	for _, filePath := range filePaths {
-		file := &types.I18nFile{
-			Path: filePath,
-			Data: "{}", // Default empty JSON object
-		}
-		files = append(files, file)
-	}
+// GetLocaleList extracts locale codes from I18nFile structs
+func GetLocaleList(files []*types.I18nFile) ([]string, error) {
+	locales := make([]string, 0, len(files))
 
-	return files, nil
-}
-
-// GetLocaleList extracts locale codes from file paths
-func GetLocaleList(filePaths []string) ([]string, error) {
-	locales := make([]string, 0, len(filePaths))
-
-	for _, filePath := range filePaths {
-		locale, err := ParseLocaleFromPath(filePath)
-		if err != nil {
-			return nil, err
-		}
-		locales = append(locales, locale)
+	for _, file := range files {
+		locales = append(locales, file.Locale)
 	}
 
 	return locales, nil
@@ -84,8 +66,7 @@ func GetLocaleList(filePaths []string) ([]string, error) {
 // FindFileByLocale finds the I18nFile for a given locale
 func FindFileByLocale(files []*types.I18nFile, locale string) *types.I18nFile {
 	for _, file := range files {
-		fileLocale, err := ParseLocaleFromPath(file.Path)
-		if err == nil && fileLocale == locale {
+		if file.Locale == locale {
 			return file
 		}
 	}

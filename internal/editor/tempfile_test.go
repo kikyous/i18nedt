@@ -290,8 +290,8 @@ func TestCleanupTempFile(t *testing.T) {
 
 func TestApplyChanges(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: `{"old": "旧值"}`},
-		{Path: "en-US.json", Data: `{"old": "Old value"}`},
+		{Path: "zh-CN.json", Data: `{"old": "旧值"}`, Locale: "zh-CN"},
+		{Path: "en-US.json", Data: `{"old": "Old value"}`, Locale: "en-US"},
 	}
 
 	temp := &types.TempFile{

@@ -101,55 +101,6 @@ func TestParseLocaleFromPath(t *testing.T) {
 	}
 }
 
-func TestCreateI18nFiles(t *testing.T) {
-	tests := []struct {
-		name      string
-		filePaths []string
-		wantLen   int
-		wantErr   bool
-	}{
-		{
-			name:      "single file",
-			filePaths: []string{"test.json"},
-			wantLen:   1,
-			wantErr:   false,
-		},
-		{
-			name:      "multiple files",
-			filePaths: []string{"zh-CN.json", "en-US.json", "ja-JP.json"},
-			wantLen:   3,
-			wantErr:   false,
-		},
-		{
-			name:      "empty file list",
-			filePaths: []string{},
-			wantLen:   0,
-			wantErr:   false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			files, err := CreateI18nFiles(tt.filePaths)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateI18nFiles() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(files) != tt.wantLen {
-				t.Errorf("CreateI18nFiles() length = %v, want %v", len(files), tt.wantLen)
-				return
-			}
-			for i, file := range files {
-				if file.Path != tt.filePaths[i] {
-					t.Errorf("CreateI18nFiles() file[%d].Path = %v, want %v", i, file.Path, tt.filePaths[i])
-				}
-				if file.Data == "" {
-					t.Errorf("CreateI18nFiles() file[%d].Data should not be empty", i)
-				}
-			}
-		})
-	}
-}
 
 func TestGetLocaleList(t *testing.T) {
 	tests := []struct {
@@ -198,7 +149,14 @@ func TestGetLocaleList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetLocaleList(tt.filePaths)
+			// Create I18nFile structs first
+			files, err := LoadAllFiles(tt.filePaths)
+			if err != nil {
+				t.Errorf("LoadAllFiles() error = %v", err)
+				return
+			}
+
+			got, err := GetLocaleList(files)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetLocaleList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -218,9 +176,9 @@ func TestGetLocaleList(t *testing.T) {
 
 func TestFindFileByLocale(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: "{}"},
-		{Path: "en-US.json", Data: "{}"},
-		{Path: "ja-JP.json", Data: "{}"},
+		{Path: "zh-CN.json", Data: "{}", Locale: "zh-CN"},
+		{Path: "en-US.json", Data: "{}", Locale: "en-US"},
+		{Path: "ja-JP.json", Data: "{}", Locale: "ja-JP"},
 	}
 
 	tests := []struct {
@@ -267,10 +225,10 @@ func TestFindFileByLocale(t *testing.T) {
 
 func TestFindFileByLocaleComplex(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "src/locales/zh-CN/app.json", Data: "{}"},
-		{Path: "src/locales/en-US/app.json", Data: "{}"},
-		{Path: "src/locales/zh-CN.messages.json", Data: "{}"},
-		{Path: "locales/en.json", Data: "{}"},
+		{Path: "src/locales/zh-CN/app.json", Data: "{}", Locale: "zh-CN"},
+		{Path: "src/locales/en-US/app.json", Data: "{}", Locale: "en-US"},
+		{Path: "src/locales/zh-CN.messages.json", Data: "{}", Locale: "zh-CN"},
+		{Path: "locales/en.json", Data: "{}", Locale: "en"},
 	}
 
 	tests := []struct {

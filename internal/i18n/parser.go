@@ -13,9 +13,16 @@ import (
 
 // LoadFile loads and parses an i18n JSON file
 func LoadFile(filePath string) (*types.I18nFile, error) {
+	// Extract locale from path
+	locale, err := ParseLocaleFromPath(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract locale from path %s: %w", filePath, err)
+	}
+
 	file := &types.I18nFile{
-		Path: filePath,
-		Data: "{}", // Default empty JSON object
+		Path:   filePath,
+		Data:   "{}", // Default empty JSON object
+		Locale: locale,
 	}
 
 	// Check if file exists

@@ -38,8 +38,9 @@ type Config struct {
 
 // I18nFile represents a single i18n JSON file
 type I18nFile struct {
-	Path string
-	Data string // Raw JSON string
+	Path   string
+	Data   string // Raw JSON string
+	Locale string // Locale identifier extracted from filename
 }
 
 // TempFile represents the temporary edit file

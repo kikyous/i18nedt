@@ -16,8 +16,8 @@ import (
 
 // CreateTempFile creates a temporary file for editing
 func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, error) {
-	// Get locale list from file paths
-	locales, err := i18n.GetLocaleList(getFilePaths(files))
+	// Get locale list from I18nFile structs
+	locales, err := i18n.GetLocaleList(files)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract locales: %w", err)
 	}
@@ -44,13 +44,8 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 	// Load existing values from files
 	for _, key := range keys {
 		for _, file := range files {
-			locale, err := i18n.ParseLocaleFromPath(file.Path)
-			if err != nil {
-				continue // Skip files with invalid locale
-			}
-
 			if value, err := i18n.GetValueTyped(file.Data, key); err == nil {
-				temp.Content[key][locale] = value
+				temp.Content[key][file.Locale] = value
 			}
 		}
 	}
@@ -298,12 +293,7 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 	// Handle updates and additions
 	for key, localeValues := range temp.Content {
 		for _, file := range files {
-			locale, err := i18n.ParseLocaleFromPath(file.Path)
-			if err != nil {
-				continue // Skip files with invalid locale
-			}
-
-			value, exists := localeValues[locale]
+			value, exists := localeValues[file.Locale]
 			if !exists {
 				continue // Skip if no value for this locale
 			}
