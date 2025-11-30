@@ -150,7 +150,7 @@ func TestGetLocaleList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create I18nFile structs first
-			files, err := LoadAllFiles(tt.filePaths)
+			files, err := LoadAllFiles(tt.filePaths, false)
 			if err != nil {
 				t.Errorf("LoadAllFiles() error = %v", err)
 				return

@@ -69,6 +69,8 @@ func ParseFlags() (*types.Config, error) {
 			config.PrintOnly = true
 		} else if arg == "-a" || arg == "--no-tips" {
 			config.NoTips = true
+		} else if arg == "-P" || arg == "--use-path-as-locale" {
+			config.UseFilePathAsLocale = true
 		} else if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
 			// Handle combined flags like -pa, -ap
 			flags := arg[1:]
@@ -79,6 +81,8 @@ func ParseFlags() (*types.Config, error) {
 					config.PrintOnly = true
 				case 'a':
 					config.NoTips = true
+				case 'P':
+					config.UseFilePathAsLocale = true
 				case 'v':
 					PrintVersion()
 					os.Exit(0)
@@ -139,6 +143,7 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  -k key, --key=key     Key to edit (can be specified multiple times)\n")
 	fmt.Fprintf(os.Stderr, "  -p, --print           Print temporary file content without launching editor\n")
 	fmt.Fprintf(os.Stderr, "  -a, --no-tips         Exclude AI tips from temporary file content\n")
+	fmt.Fprintf(os.Stderr, "  -P, --use-path-as-locale  Use full file path (including extension) as locale identifier\n")
 	fmt.Fprintf(os.Stderr, "  -v, --version         Show version information\n")
 	fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
 	fmt.Fprintf(os.Stderr, "Examples:\n")
@@ -146,9 +151,10 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  i18nedt -k home.welcome -k home.start src/locales/*.json\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt --key=nav.menu --key=footer src/locales/*.json\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt src/locales/*.json -k home  # -k can be anywhere\n")
-	fmt.Fprintf(os.Stderr, "  i18nedt -pa -k home src/locales/*.json  # Print content without AI tips\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -p -k home src/locales/*.json  # Print content only\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -a -k home src/locales/*.json  # No AI tips\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -pa -k home src/locales/*.json  # Print content without AI tips\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -P -k home src/locales/*.json # Use file path as locale identifiers\n")
 }
 
 // expandFilePaths expands file patterns (like glob) to actual file paths

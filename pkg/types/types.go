@@ -29,11 +29,12 @@ func NewJSONValue(v string) *Value {
 
 // Config represents the application configuration
 type Config struct {
-	Files     []string
-	Keys      []string
-	Editor    string
-	PrintOnly bool // -p flag: print temp file content without launching editor
-	NoTips    bool // -a flag: exclude AI tips from temp file content
+	Files             []string
+	Keys              []string
+	Editor            string
+	PrintOnly         bool // -p flag: print temp file content without launching editor
+	NoTips            bool // -a flag: exclude AI tips from temp file content
+	UseFilePathAsLocale bool // -P flag: use file path as locale instead of extracting BCP47 tag
 }
 
 // I18nFile represents a single i18n JSON file

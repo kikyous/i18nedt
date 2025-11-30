@@ -10,7 +10,8 @@
       "Bash(go test:*)",
       "Bash(make:*)",
       "Bash(chmod:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

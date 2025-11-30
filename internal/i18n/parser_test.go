@@ -91,7 +91,7 @@ func TestLoadFile(t *testing.T) {
 				t.Fatalf("Failed to setup test: %v", err)
 			}
 
-			file, err := LoadFile(filePath)
+			file, err := LoadFile(filePath, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -268,7 +268,7 @@ func TestLoadAllFiles(t *testing.T) {
 		filepath.Join(tmpDir, "nonexistent.json"), // This should not cause error
 	}
 
-	files, err := LoadAllFiles(filePaths)
+	files, err := LoadAllFiles(filePaths, false)
 	if err != nil {
 		t.Errorf("LoadAllFiles() error = %v", err)
 		return

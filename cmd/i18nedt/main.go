@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Load all i18n files
-	files, err := i18n.LoadAllFiles(config.Files)
+	files, err := i18n.LoadAllFiles(config.Files, config.UseFilePathAsLocale)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
 		os.Exit(1)
