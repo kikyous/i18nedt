@@ -160,9 +160,9 @@ func TestExpandFilePaths(t *testing.T) {
 			wantErr: true, // Glob pattern with no matches should error
 		},
 		{
-			name:     "brace expansion pattern",
-			paths:    []string{"{zh-CN,en-US}.json"},
-			wantErr:  true, // This pattern doesn't work with filepath.Glob
+			name:    "brace expansion pattern",
+			paths:   []string{"{zh-CN,en-US}.json"},
+			wantErr: false, // Now supported with brace expansion
 		},
 	}
 

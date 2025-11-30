@@ -121,8 +121,18 @@ func ParseFlags() (*types.Config, error) {
 		return nil, fmt.Errorf("at least one key must be specified with -k or --key")
 	}
 
+	// If no files specified in command line, check environment variable
 	if len(files) == 0 {
-		return nil, fmt.Errorf("at least one file must be specified")
+		if envFiles := os.Getenv("I18NEDT_FILES"); envFiles != "" {
+			// Split environment variable by spaces/colons/semicolons
+			files = strings.FieldsFunc(envFiles, func(r rune) bool {
+				return r == ' ' || r == ':' || r == ';'
+			})
+		}
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file must be specified (use command line arguments or I18NEDT_FILES environment variable)")
 	}
 
 	// Expand file paths
@@ -146,6 +156,9 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  -P, --use-path-as-locale  Use full file path (including extension) as locale identifier\n")
 	fmt.Fprintf(os.Stderr, "  -v, --version         Show version information\n")
 	fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
+	fmt.Fprintf(os.Stderr, "Environment Variables:\n")
+	fmt.Fprintf(os.Stderr, "  I18NEDT_FILES         Space/colon/semicolon separated list of i18n files\n")
+	fmt.Fprintf(os.Stderr, "                        (used when no files are specified on command line)\n\n")
 	fmt.Fprintf(os.Stderr, "Examples:\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt src/locales/{zh-CN,zh-TW,en-US}.json -k home.welcome\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -k home.welcome -k home.start src/locales/*.json\n")
@@ -155,25 +168,109 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  i18nedt -a -k home src/locales/*.json  # No AI tips\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -pa -k home src/locales/*.json  # Print content without AI tips\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -P -k home src/locales/*.json # Use file path as locale identifiers\n")
+	fmt.Fprintf(os.Stderr, "  I18NEDT_FILES=\"src/locales/{zh-CN,en-US}.json\" i18nedt -k home.welcome\n")
+	fmt.Fprintf(os.Stderr, "  export I18NEDT_FILES=\"src/locales/*.json\" && i18nedt -k home.welcome\n")
 }
 
-// expandFilePaths expands file patterns (like glob) to actual file paths
+// expandBraces expands bash-style brace expansion patterns like {a,b,c}
+func expandBraces(pattern string) ([]string, error) {
+	// Find first opening brace
+	openBrace := strings.Index(pattern, "{")
+	if openBrace == -1 {
+		return []string{pattern}, nil
+	}
+
+	// Find matching closing brace (simplified: find first closing brace after opening)
+	closeBrace := strings.Index(pattern[openBrace:], "}")
+	if closeBrace == -1 {
+		return []string{pattern}, nil // Unmatched brace, treat as literal
+	}
+	closeBrace += openBrace
+
+	// Extract prefix, brace content, and suffix
+	prefix := pattern[:openBrace]
+	braceContent := pattern[openBrace+1 : closeBrace]
+	suffix := pattern[closeBrace+1:]
+
+	// Split brace content by commas (handle nested braces later)
+	var alternatives []string
+	start := 0
+	braceDepth := 0
+
+	for i, r := range braceContent {
+		switch r {
+		case '{':
+			braceDepth++
+		case '}':
+			braceDepth--
+		case ',':
+			if braceDepth == 0 {
+				alternatives = append(alternatives, braceContent[start:i])
+				start = i + 1
+			}
+		}
+	}
+	// Add the last alternative
+	alternatives = append(alternatives, braceContent[start:])
+
+	// Generate all combinations
+	var result []string
+	for _, alt := range alternatives {
+		// Recursively expand if there are nested braces in this alternative
+		expandedAlt, err := expandBraces(alt)
+		if err != nil {
+			return nil, err
+		}
+
+		// Recursively expand if there are more braces in the suffix
+		expandedSuffix, err := expandBraces(suffix)
+		if err != nil {
+			return nil, err
+		}
+
+		// Combine all expanded alternatives with all expanded suffixes
+		for _, ea := range expandedAlt {
+			for _, es := range expandedSuffix {
+				result = append(result, prefix+ea+es)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// expandFilePaths expands file patterns (like glob and brace expansion) to actual file paths
 func expandFilePaths(paths []string) ([]string, error) {
 	var expanded []string
 
 	for _, path := range paths {
-		// Handle glob patterns
-		if strings.Contains(path, "*") || strings.Contains(path, "{") {
-			matches, err := filepath.Glob(path)
+		var patterns []string
+		var err error
+
+		// Handle brace expansion first
+		if strings.Contains(path, "{") {
+			patterns, err = expandBraces(path)
 			if err != nil {
-				return nil, fmt.Errorf("invalid glob pattern %s: %w", path, err)
+				return nil, fmt.Errorf("brace expansion failed for %s: %w", path, err)
 			}
-			if len(matches) == 0 {
-				return nil, fmt.Errorf("no files match pattern: %s", path)
-			}
-			expanded = append(expanded, matches...)
 		} else {
-			expanded = append(expanded, path)
+			patterns = []string{path}
+		}
+
+		// Now handle glob patterns for each expanded pattern
+		for _, pattern := range patterns {
+			if strings.Contains(pattern, "*") {
+				matches, err := filepath.Glob(pattern)
+				if err != nil {
+					return nil, fmt.Errorf("invalid glob pattern %s: %w", pattern, err)
+				}
+				if len(matches) == 0 {
+					return nil, fmt.Errorf("no files match pattern: %s", pattern)
+				}
+				expanded = append(expanded, matches...)
+			} else {
+				expanded = append(expanded, pattern)
+			}
 		}
 	}
 
