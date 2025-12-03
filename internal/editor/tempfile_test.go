@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -128,7 +127,7 @@ func TestWriteTempFile(t *testing.T) {
 	}
 
 	// Verify file content
-	data, err := ioutil.ReadFile(temp.Path)
+	data, err := os.ReadFile(temp.Path)
 	if err != nil {
 		t.Fatalf("Failed to read temp file: %v", err)
 	}
@@ -228,7 +227,7 @@ func TestReadTempFile(t *testing.T) {
 Welcome`
 
 	// Create a temporary file
-	tmpFile, err := ioutil.TempFile("", "test-read-*.txt")
+	tmpFile, err := os.CreateTemp("", "test-read-*.txt")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
@@ -262,7 +261,7 @@ Welcome`
 
 func TestCleanupTempFile(t *testing.T) {
 	// Create a temporary file
-	tmpFile, err := ioutil.TempFile("", "test-cleanup-*.txt")
+	tmpFile, err := os.CreateTemp("", "test-cleanup-*.txt")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}

@@ -2,7 +2,6 @@ package i18n
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,7 +42,7 @@ func TestLoadFile(t *testing.T) {
 					},
 				}
 				jsonData, _ := json.Marshal(data)
-				err := ioutil.WriteFile(filePath, jsonData, 0644)
+				err := os.WriteFile(filePath, jsonData, 0644)
 				return filePath, err
 			},
 			wantErr: false,
@@ -67,7 +66,7 @@ func TestLoadFile(t *testing.T) {
 			name: "load empty file",
 			setup: func() (string, error) {
 				filePath := filepath.Join(tmpDir, "empty.json")
-				err := ioutil.WriteFile(filePath, []byte{}, 0644)
+				err := os.WriteFile(filePath, []byte{}, 0644)
 				return filePath, err
 			},
 			wantErr: false,
@@ -77,7 +76,7 @@ func TestLoadFile(t *testing.T) {
 			name: "load invalid JSON",
 			setup: func() (string, error) {
 				filePath := filepath.Join(tmpDir, "invalid.json")
-				err := ioutil.WriteFile(filePath, []byte("{invalid json}"), 0644)
+				err := os.WriteFile(filePath, []byte("{invalid json}"), 0644)
 				return filePath, err
 			},
 			wantErr: true,
@@ -185,7 +184,7 @@ func TestSaveFile(t *testing.T) {
 			}
 
 			// Load and verify content
-			data, err := ioutil.ReadFile(tt.file.Path)
+			data, err := os.ReadFile(tt.file.Path)
 			if err != nil {
 				t.Errorf("SaveFile() failed to read saved file: %v", err)
 				return
@@ -255,7 +254,7 @@ func TestLoadAllFiles(t *testing.T) {
 			"welcome": "Welcome",
 		}
 		jsonData, _ := json.Marshal(data)
-		err := ioutil.WriteFile(filePath, jsonData, 0644)
+		err := os.WriteFile(filePath, jsonData, 0644)
 		if err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}
@@ -314,7 +313,7 @@ func TestBackupFile(t *testing.T) {
 					"welcome": "Welcome",
 				}
 				jsonData, _ := json.Marshal(data)
-				ioutil.WriteFile(filePath, jsonData, 0644)
+				os.WriteFile(filePath, jsonData, 0644)
 				return filePath
 			},
 			wantErr: false,
@@ -349,8 +348,8 @@ func TestBackupFile(t *testing.T) {
 					t.Errorf("BackupFile() backup file was not created")
 				} else {
 					// Verify backup content matches original
-					originalData, _ := ioutil.ReadFile(filePath)
-					backupData, _ := ioutil.ReadFile(backupPath)
+					originalData, _ := os.ReadFile(filePath)
+					backupData, _ := os.ReadFile(backupPath)
 					if string(originalData) != string(backupData) {
 						t.Errorf("BackupFile() backup content differs from original")
 					}

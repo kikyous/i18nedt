@@ -71,6 +71,8 @@ func ParseFlags() (*types.Config, error) {
 			config.NoTips = true
 		} else if arg == "-P" || arg == "--use-path-as-locale" {
 			config.UseFilePathAsLocale = true
+		} else if arg == "--flatten" {
+			config.Flatten = true
 		} else if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
 			// Handle combined flags like -pa, -ap
 			flags := arg[1:]
@@ -83,6 +85,8 @@ func ParseFlags() (*types.Config, error) {
 					config.NoTips = true
 				case 'P':
 					config.UseFilePathAsLocale = true
+				case 'f':
+					config.Flatten = true
 				case 'v':
 					PrintVersion()
 					os.Exit(0)
@@ -117,7 +121,8 @@ func ParseFlags() (*types.Config, error) {
 		i++
 	}
 
-	if len(keys) == 0 {
+	// Keys are only required if not in flatten mode
+	if len(keys) == 0 && !config.Flatten {
 		return nil, fmt.Errorf("at least one key must be specified with -k or --key")
 	}
 
@@ -154,6 +159,7 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  -p, --print           Print temporary file content without launching editor\n")
 	fmt.Fprintf(os.Stderr, "  -a, --no-tips         Exclude AI tips from temporary file content\n")
 	fmt.Fprintf(os.Stderr, "  -P, --use-path-as-locale  Use full file path (including extension) as locale identifier\n")
+	fmt.Fprintf(os.Stderr, "  -f, --flatten         Flatten JSON files to key=value format\n")
 	fmt.Fprintf(os.Stderr, "  -v, --version         Show version information\n")
 	fmt.Fprintf(os.Stderr, "  -h, --help            Show this help message\n\n")
 	fmt.Fprintf(os.Stderr, "Environment Variables:\n")
@@ -168,6 +174,8 @@ func PrintUsage() {
 	fmt.Fprintf(os.Stderr, "  i18nedt -a -k home src/locales/*.json  # No AI tips\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -pa -k home src/locales/*.json  # Print content without AI tips\n")
 	fmt.Fprintf(os.Stderr, "  i18nedt -P -k home src/locales/*.json # Use file path as locale identifiers\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt -f src/locales/*.json  # Flatten JSON files to key=value format\n")
+	fmt.Fprintf(os.Stderr, "  i18nedt --flatten src/locales/{zh-CN,en-US}.json  # Flatten multiple files\n")
 	fmt.Fprintf(os.Stderr, "  I18NEDT_FILES=\"src/locales/{zh-CN,en-US}.json\" i18nedt -k home.welcome\n")
 	fmt.Fprintf(os.Stderr, "  export I18NEDT_FILES=\"src/locales/*.json\" && i18nedt -k home.welcome\n")
 }

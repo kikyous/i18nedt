@@ -3,7 +3,6 @@ package editor
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -140,7 +139,7 @@ func WriteTempFileWithOptions(temp *types.TempFile, noTips bool) error {
 		return fmt.Errorf("failed to generate temp file content: %w", err)
 	}
 
-	return ioutil.WriteFile(temp.Path, content, 0644)
+	return os.WriteFile(temp.Path, content, 0644)
 }
 
 // ParseTempFileContent parses the content of the edited temporary file
@@ -250,7 +249,7 @@ func saveValue(temp *types.TempFile, key, locale, value string, isJSON bool) err
 
 // ReadTempFile reads and parses the temporary file
 func ReadTempFile(temp *types.TempFile) error {
-	content, err := ioutil.ReadFile(temp.Path)
+	content, err := os.ReadFile(temp.Path)
 	if err != nil {
 		return fmt.Errorf("failed to read temporary file: %w", err)
 	}

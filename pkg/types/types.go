@@ -35,6 +35,7 @@ type Config struct {
 	PrintOnly         bool // -p flag: print temp file content without launching editor
 	NoTips            bool // -a flag: exclude AI tips from temp file content
 	UseFilePathAsLocale bool // -P flag: use file path as locale instead of extracting BCP47 tag
+	Flatten           bool // --flatten flag: flatten JSON files to key=value format
 }
 
 // I18nFile represents a single i18n JSON file

@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,7 +10,7 @@ import (
 
 // CreateTempDir creates a temporary directory for testing
 func CreateTempDir(t *testing.T) string {
-	tmpDir, err := ioutil.TempDir("", "i18nedt-test-*")
+	tmpDir, err := os.MkdirTemp("", "i18nedt-test-*")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -20,7 +19,7 @@ func CreateTempDir(t *testing.T) string {
 
 // CreateTempFile creates a temporary file with given content
 func CreateTempFile(t *testing.T, content string) string {
-	tmpFile, err := ioutil.TempFile("", "i18nedt-test-*.json")
+	tmpFile, err := os.CreateTemp("", "i18nedt-test-*.json")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
@@ -44,7 +43,7 @@ func CreateTestFiles(t *testing.T, tmpDir string, files map[string]string) []*ty
 
 	for filename, content := range files {
 		filePath := filepath.Join(tmpDir, filename)
-		err := ioutil.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
 			t.Fatalf("Failed to create test file %s: %v", filename, err)
 		}

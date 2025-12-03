@@ -7,6 +7,7 @@ import (
 
 	"github.com/kikyous/i18nedt/internal/cli"
 	"github.com/kikyous/i18nedt/internal/editor"
+	"github.com/kikyous/i18nedt/internal/flatten"
 	"github.com/kikyous/i18nedt/internal/i18n"
 )
 
@@ -16,6 +17,24 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing arguments: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Handle flatten mode
+	if config.Flatten {
+		// In flatten mode, we don't need keys or editor validation
+		if len(config.Files) == 0 {
+			fmt.Fprintf(os.Stderr, "Error: at least one file must be specified for flatten mode\n")
+			os.Exit(1)
+		}
+
+		// Flatten each file
+		for _, file := range config.Files {
+			if err := flatten.FlattenJSON(file); err != nil {
+				fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", file, err)
+				os.Exit(1)
+			}
+		}
+		return
 	}
 
 	// Validate configuration

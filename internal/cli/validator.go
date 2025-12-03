@@ -15,7 +15,8 @@ func ValidateConfig(config *types.Config) error {
 		return fmt.Errorf("no files specified")
 	}
 
-	if len(config.Keys) == 0 {
+	// In flatten mode, keys are not required
+	if !config.Flatten && len(config.Keys) == 0 {
 		return fmt.Errorf("no keys specified")
 	}
 
@@ -26,10 +27,12 @@ func ValidateConfig(config *types.Config) error {
 		}
 	}
 
-	// Validate each key
-	for _, key := range config.Keys {
-		if err := validateKey(key); err != nil {
-			return fmt.Errorf("invalid key %s: %w", key, err)
+	// Validate each key (only if not in flatten mode)
+	if !config.Flatten {
+		for _, key := range config.Keys {
+			if err := validateKey(key); err != nil {
+				return fmt.Errorf("invalid key %s: %w", key, err)
+			}
 		}
 	}
 
