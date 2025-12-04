@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/bmatcuk/doublestar/v4"
@@ -28,7 +29,7 @@ var args struct {
 	PathAsLocale bool     `arg:"-P,--path-as-locale" help:"Use file path as locale identifier"`
 	Flatten      bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
 	Version      bool     `arg:"-v,--version" help:"Show version information"`
-	Files        []string `arg:"positional,env" help:"Target file paths"`
+	Files        []string `arg:"positional" help:"Target file paths [env: I18NEDT_FILES]"`
 }
 
 func main() {
@@ -52,6 +53,13 @@ func main() {
 
 	// Handle file expansion (globbing)
 	var finalFiles []string
+
+	// If no files specified, use environment variable
+	if len(args.Files) == 0 {
+		if envFiles := os.Getenv("I18NEDT_FILES"); envFiles != "" {
+			args.Files = strings.Fields(envFiles)
+		}
+	}
 
 	for _, pattern := range args.Files {
 		// Use doublestar for file globbing (supports {a,b} and **)
