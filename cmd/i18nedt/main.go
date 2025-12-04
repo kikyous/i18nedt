@@ -5,28 +5,92 @@ import (
 	"log"
 	"os"
 
-	"github.com/kikyous/i18nedt/internal/cli"
+	"github.com/alexflint/go-arg"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/kikyous/i18nedt/internal/editor"
 	"github.com/kikyous/i18nedt/internal/flatten"
 	"github.com/kikyous/i18nedt/internal/i18n"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
+// Version information
+var (
+	Version = "dev"
+	Commit  = "unknown"
+	Date    = "unknown"
+)
+
+// args struct for go-arg
+var args struct {
+	Keys         []string `arg:"-k,--key,separate" help:"Key to edit (can be specified multiple times)"`
+	PrintOnly    bool     `arg:"-p,--print" help:"Print temporary file content without launching editor"`
+	NoTips       bool     `arg:"-a,--no-tips,env" help:"Exclude AI tips from temporary file content"`
+	PathAsLocale bool     `arg:"-P,--path-as-locale" help:"Use file path as locale identifier"`
+	Flatten      bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
+	Version      bool     `arg:"-v,--version" help:"Show version information"`
+	Files        []string `arg:"positional,env" help:"Target file paths"`
+}
+
 func main() {
+	p, err := arg.NewParser(arg.Config{
+		EnvPrefix: "I18NEDT_",
+	}, &args)
 	// Parse command line arguments
-	config, err := cli.ParseFlags()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing arguments: %v\n", err)
+	p.MustParse(os.Args[1:])
+
+	// Handle version flag
+	if args.Version {
+		fmt.Printf("i18nedt version %s\n", Version)
+		if Commit != "unknown" {
+			fmt.Printf("commit: %s\n", Commit)
+		}
+		if Date != "unknown" {
+			fmt.Printf("built: %s\n", Date)
+		}
+		os.Exit(0)
+	}
+
+	// Handle file expansion (globbing)
+	var finalFiles []string
+
+	for _, pattern := range args.Files {
+		// Use doublestar for file globbing (supports {a,b} and **)
+		matches, err := doublestar.FilepathGlob(pattern)
+		if err == nil && len(matches) > 0 {
+			finalFiles = append(finalFiles, matches...)
+		} else {
+			// If no match or error, keep original (might be a new file or specific path)
+			// But if it contains glob characters and failed to match, maybe we shouldn't add it if we want strict behavior?
+			// The original code: if err == nil && len(matches) > 0 { append matches } else { append pattern }
+			// So if I pass "*.json" and it matches nothing, it appends "*.json".
+			// Then LoadAllFiles will try to open "*.json" and fail.
+			// But here "at least one file must be specified" check is after this loop.
+			// So finalFiles should not be empty if args.Files is not empty.
+			finalFiles = append(finalFiles, pattern)
+		}
+	}
+
+	if len(finalFiles) == 0 {
+		fmt.Fprintf(os.Stderr, "Error: at least one file must be specified (use command line arguments or I18NEDT_FILES environment variable)\n")
 		os.Exit(1)
+	}
+
+	// Construct Config
+	config := &types.Config{
+		Files:        finalFiles,
+		Keys:         args.Keys,
+		Editor:       os.Getenv("EDITOR"),
+		PrintOnly:    args.PrintOnly,
+		NoTips:       args.NoTips,
+		PathAsLocale: args.PathAsLocale,
+		Flatten:      args.Flatten,
+	}
+	if config.Editor == "" {
+		config.Editor = "vim"
 	}
 
 	// Handle flatten mode
 	if config.Flatten {
-		// In flatten mode, we don't need keys or editor validation
-		if len(config.Files) == 0 {
-			fmt.Fprintf(os.Stderr, "Error: at least one file must be specified for flatten mode\n")
-			os.Exit(1)
-		}
-
 		// Flatten each file
 		for _, file := range config.Files {
 			if err := flatten.FlattenJSON(file); err != nil {
@@ -37,12 +101,6 @@ func main() {
 		return
 	}
 
-	// Validate configuration
-	if err := cli.ValidateConfig(config); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
 	// Validate editor
 	if err := editor.ValidateEditor(config.Editor); err != nil {
 		fmt.Fprintf(os.Stderr, "Editor error: %v\n", err)
@@ -50,14 +108,13 @@ func main() {
 	}
 
 	// Load all i18n files
-	files, err := i18n.LoadAllFiles(config.Files, config.UseFilePathAsLocale)
+	files, err := i18n.LoadAllFiles(config.Files, config.PathAsLocale)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Use keys directly without expansion - user explicitly specifies what to edit
-	// This is part of the refactoring to remove key expansion mechanism
 	tempFile, err := editor.CreateTempFile(files, config.Keys)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating temporary file: %v\n", err)

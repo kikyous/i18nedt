@@ -12,10 +12,10 @@ import (
 )
 
 // LoadFile loads and parses an i18n JSON file
-func LoadFile(filePath string, useFilePathAsLocale bool) (*types.I18nFile, error) {
+func LoadFile(filePath string, PathAsLocale bool) (*types.I18nFile, error) {
 	// Determine locale
 	var locale string
-	if useFilePathAsLocale {
+	if PathAsLocale {
 		// Use full file path (including extension) as locale
 		locale = filePath
 	} else {
@@ -109,11 +109,11 @@ func GetDirectory(filePath string) string {
 }
 
 // LoadAllFiles loads multiple i18n files
-func LoadAllFiles(filePaths []string, useFilePathAsLocale bool) ([]*types.I18nFile, error) {
+func LoadAllFiles(filePaths []string, PathAsLocale bool) ([]*types.I18nFile, error) {
 	files := make([]*types.I18nFile, 0, len(filePaths))
 
 	for _, filePath := range filePaths {
-		file, err := LoadFile(filePath, useFilePathAsLocale)
+		file, err := LoadFile(filePath, PathAsLocale)
 		if err != nil {
 			return nil, err
 		}

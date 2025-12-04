@@ -5,7 +5,7 @@ all: build
 
 # Build the binary
 build:
-	go build -ldflags "-X github.com/kikyous/i18nedt/internal/cli.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) -X github.com/kikyous/i18nedt/internal/cli.Commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X github.com/kikyous/i18nedt/internal/cli.Date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/i18nedt cmd/i18nedt/main.go
+	go build -ldflags "-X main.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) -X main.Commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.Date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/i18nedt cmd/i18nedt/main.go
 
 # Run tests
 test:
