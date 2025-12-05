@@ -44,13 +44,6 @@ func TestDiscoverFiles(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			name:           "glob pattern",
-			patterns:       []string{filepath.Join(tmpDir, "locales", "*", "*.json")},
-			wantSourcesLen: 3,
-			wantFilesLen:   3,
-			wantErr:        false,
-		},
-		{
 			name:           "custom pattern placeholder",
 			patterns:       []string{filepath.Join(tmpDir, "locales", "{{language}}", "{{ns}}.json")},
 			wantSourcesLen: 3,
@@ -58,18 +51,25 @@ func TestDiscoverFiles(t *testing.T) {
 			wantErr:        false,
 		},
 		{
-			name:           "no files found (but pattern valid)",
-			patterns:       []string{filepath.Join(tmpDir, "locales", "*.txt")},
+			name:           "valid pattern but no files found",
+			patterns:       []string{filepath.Join(tmpDir, "locales", "{{language}}", "*.txt")},
 			wantSourcesLen: 1, // Adds the pattern itself if no match
 			wantFilesLen:   1,
 			wantErr:        false,
 		},
 		{
-			name:           "empty pattern list with env var",
+			name:           "empty pattern list with env var pattern",
 			patterns:       []string{},
-			envVar:         filepath.Join(tmpDir, "locales", "*", "common.json"),
+			envVar:         filepath.Join(tmpDir, "locales", "{{language}}", "common.json"),
 			wantSourcesLen: 2,
 			wantFilesLen:   2,
+			wantErr:        false,
+		},
+		{
+			name:           "valid pattern (no placeholders)",
+			patterns:       []string{filepath.Join(tmpDir, "locales", "*", "*.json")},
+			wantSourcesLen: 3,
+			wantFilesLen:   3,
 			wantErr:        false,
 		},
 		{

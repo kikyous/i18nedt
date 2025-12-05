@@ -329,8 +329,9 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 			}
 
 			newData, err := i18n.DeleteValue(file.Data, targetKey)
-			if err == nil {
+			if err == nil && newData != file.Data {
 				file.Data = newData
+				file.Dirty = true
 			}
 		}
 	}
@@ -350,9 +351,16 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 				continue // Skip if no value for this locale
 			}
 
+			// Check if value actually changed to avoid marking file as dirty unnecessarily
+			currentVal, err := i18n.GetValueTyped(file.Data, targetKey)
+			if err == nil && currentVal.Value == value.Value && currentVal.Type == value.Type {
+				continue
+			}
+
 			newData, err := i18n.SetValueTyped(file.Data, targetKey, value)
-			if err == nil {
+			if err == nil && newData != file.Data {
 				file.Data = newData
+				file.Dirty = true
 			}
 		}
 	}

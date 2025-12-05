@@ -20,13 +20,12 @@ var (
 
 // args struct for go-arg
 var args struct {
-	Keys         []string `arg:"-k,--key,separate" help:"Key to edit (can be specified multiple times)"`
-	PrintOnly    bool     `arg:"-p,--print" help:"Print temporary file content without launching editor"`
-	NoTips       bool     `arg:"-a,--no-tips,env" help:"Exclude AI tips from temporary file content"`
-	PathAsLocale bool     `arg:"-P,--path-as-locale" help:"Use file path as locale identifier"`
-	Flatten      bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
-	Version      bool     `arg:"-v,--version" help:"Show version information"`
-	Files        []string `arg:"positional" help:"Target file paths [env: I18NEDT_FILES]"`
+	Keys      []string `arg:"-k,--key,separate" help:"Key to edit (can be specified multiple times)"`
+	PrintOnly bool     `arg:"-p,--print" help:"Print temporary file content without launching editor"`
+	NoTips    bool     `arg:"-a,--no-tips,env" help:"Exclude AI tips from temporary file content"`
+	Flatten   bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
+	Version   bool     `arg:"-v,--version" help:"Show version information"`
+	Files     []string `arg:"positional" help:"Target file paths [env: I18NEDT_FILES]"`
 }
 
 func main() {
@@ -57,13 +56,12 @@ func main() {
 
 	// Construct Config
 	config := &types.Config{
-		Files:        flatFiles, // We keep this for Flatten logic which iterates simple paths
-		Keys:         args.Keys,
-		Editor:       os.Getenv("EDITOR"),
-		PrintOnly:    args.PrintOnly,
-		NoTips:       args.NoTips,
-		PathAsLocale: args.PathAsLocale,
-		Flatten:      args.Flatten,
+		Files:     flatFiles, // We keep this for Flatten logic which iterates simple paths
+		Keys:      args.Keys,
+		Editor:    os.Getenv("EDITOR"),
+		PrintOnly: args.PrintOnly,
+		NoTips:    args.NoTips,
+		Flatten:   args.Flatten,
 	}
 	if config.Editor == "" {
 		config.Editor = "vim"
@@ -72,9 +70,21 @@ func main() {
 	// Handle flatten mode
 	if config.Flatten {
 		// Flatten each file
-		for _, file := range config.Files {
-			if err := flatten.FlattenJSON(file); err != nil {
-				fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", file, err)
+		for _, source := range sources {
+			var namespace string
+			// Determine namespace
+			if source.Pattern != "" {
+				_, ns, err := i18n.ExtractMetadataFromPath(source.Path, source.Pattern)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to extract metadata from %s: %v\n", source.Path, err)
+				} else {
+					namespace = ns
+				}
+			}
+			// If pattern is empty, namespace remains empty (non-ns mode)
+
+			if err := flatten.FlattenJSON(source.Path, namespace); err != nil {
+				fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", source.Path, err)
 				os.Exit(1)
 			}
 		}
@@ -88,7 +98,7 @@ func main() {
 	}
 
 	// Load all i18n files
-	files, err := i18n.LoadAllFiles(sources, config.PathAsLocale)
+	files, err := i18n.LoadAllFiles(sources)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
 		os.Exit(1)
@@ -144,7 +154,8 @@ func main() {
 	}
 
 	// Save all files
-	if err := i18n.SaveAllFiles(files); err != nil {
+	savedCount, err := i18n.SaveAllFiles(files)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error saving files: %v\n", err)
 		os.Exit(1)
 	}
@@ -170,5 +181,5 @@ func main() {
 		fmt.Printf("Updated %d keys\n", updatedCount)
 	}
 
-	fmt.Printf("Successfully updated %d files\n", len(files))
+	fmt.Printf("Successfully updated %d files\n", savedCount)
 }

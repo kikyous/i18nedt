@@ -12,7 +12,7 @@ import (
 )
 
 // LoadFile loads and parses an i18n JSON file
-func LoadFile(filePath string, pattern string, PathAsLocale bool) (*types.I18nFile, error) {
+func LoadFile(filePath string, pattern string) (*types.I18nFile, error) {
 	// Determine locale and namespace
 	var locale, namespace string
 	var err error
@@ -24,20 +24,12 @@ func LoadFile(filePath string, pattern string, PathAsLocale bool) (*types.I18nFi
 			return nil, fmt.Errorf("failed to extract metadata from path %s using pattern %s: %w", filePath, pattern, err)
 		}
 	} else {
-		// Fallback to heuristic extraction
-		if PathAsLocale {
-			// Use full file path (including extension) as locale
-			locale = filePath
-			namespace = "" // PathAsLocale implies unique file per locale? Or just locale ID?
-		} else {
-			// Extract locale using BCP47 parsing or fallback
-			locale, err = ParseLocaleFromPath(filePath)
-			if err != nil {
-				return nil, fmt.Errorf("failed to extract locale from path %s: %w", filePath, err)
-			}
-			
-			namespace = ParseNamespace(filePath, locale)
+		// Non-NS mode: extract locale using BCP47 parsing or fallback
+		locale, err = ParseLocaleFromPath(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract locale from path %s: %w", filePath, err)
 		}
+		namespace = ""
 	}
 
 	file := &types.I18nFile{
@@ -108,13 +100,18 @@ func SaveFile(file *types.I18nFile) error {
 }
 
 // SaveAllFiles saves multiple i18n files
-func SaveAllFiles(files []*types.I18nFile) error {
+func SaveAllFiles(files []*types.I18nFile) (int, error) {
+	count := 0
 	for _, file := range files {
-		if err := SaveFile(file); err != nil {
-			return err
+		// Only save if file is dirty (modified)
+		if file.Dirty {
+			if err := SaveFile(file); err != nil {
+				return count, err
+			}
+			count++
 		}
 	}
-	return nil
+	return count, nil
 }
 
 // GetDirectory returns the directory part of a file path
@@ -129,11 +126,11 @@ type FileSource struct {
 }
 
 // LoadAllFiles loads multiple i18n files
-func LoadAllFiles(sources []FileSource, PathAsLocale bool) ([]*types.I18nFile, error) {
+func LoadAllFiles(sources []FileSource) ([]*types.I18nFile, error) {
 	files := make([]*types.I18nFile, 0, len(sources))
 
 	for _, src := range sources {
-		file, err := LoadFile(src.Path, src.Pattern, PathAsLocale)
+		file, err := LoadFile(src.Path, src.Pattern)
 		if err != nil {
 			return nil, err
 		}

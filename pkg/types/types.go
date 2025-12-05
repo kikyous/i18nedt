@@ -27,15 +27,14 @@ func NewJSONValue(v string) *Value {
 	return &Value{Type: ValueTypeJSON, Value: v}
 }
 
-// Config represents the application configuration
+// Config holds application configuration
 type Config struct {
-	Files        []string
-	Keys         []string
-	Editor       string
-	PrintOnly    bool // -p flag: print temp file content without launching editor
-	NoTips       bool // -a flag: exclude AI tips from temp file content
-	PathAsLocale bool // -P flag: use file path as locale instead of extracting BCP47 tag
-	Flatten      bool // --flatten flag: flatten JSON files to key=value format
+	Files     []string
+	Keys      []string
+	Editor    string
+	PrintOnly bool
+	NoTips    bool
+	Flatten   bool
 }
 
 // I18nFile represents a single i18n JSON file
@@ -44,6 +43,7 @@ type I18nFile struct {
 	Data      string
 	Locale    string
 	Namespace string
+	Dirty     bool
 }
 
 // TempFile represents the temporary edit file

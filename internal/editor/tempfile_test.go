@@ -321,6 +321,14 @@ func TestApplyChanges(t *testing.T) {
 	if value, err := i18n.GetValue(files[1].Data, "new"); err != nil || value != "New value" {
 		t.Errorf("ApplyChanges() new key in en-US = %v, want %v", value, "New value")
 	}
+
+	// Verify dirty flag
+	if !files[0].Dirty {
+		t.Error("ApplyChanges() zh-CN file should be dirty")
+	}
+	if !files[1].Dirty {
+		t.Error("ApplyChanges() en-US file should be dirty")
+	}
 }
 
 func TestGetFilePaths(t *testing.T) {

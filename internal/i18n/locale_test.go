@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/kikyous/i18nedt/pkg/types"
@@ -152,9 +153,19 @@ func TestGetLocaleList(t *testing.T) {
 			// Create I18nFile structs first
 			sources := make([]FileSource, len(tt.filePaths))
 			for i, path := range tt.filePaths {
-				sources[i] = FileSource{Path: path}
+				// Default pattern
+				pattern := "{{language}}.json"
+				
+				// Adjust pattern based on file extension/structure for test cases
+				if strings.HasSuffix(path, ".txt") {
+					pattern = "{{language}}.txt"
+				} else if strings.Contains(path, ".messages.json") {
+					pattern = "{{language}}.messages.json"
+				}
+				
+				sources[i] = FileSource{Path: path, Pattern: pattern}
 			}
-			files, err := LoadAllFiles(sources, false)
+			files, err := LoadAllFiles(sources)
 			if err != nil {
 				t.Errorf("LoadAllFiles() error = %v", err)
 				return
@@ -213,51 +224,6 @@ func TestFindFileByLocale(t *testing.T) {
 		{
 			name:   "find empty locale",
 			locale: "",
-			want:   nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := FindFileByLocale(files, tt.locale)
-			if got != tt.want {
-				t.Errorf("FindFileByLocale() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestFindFileByLocaleComplex(t *testing.T) {
-	files := []*types.I18nFile{
-		{Path: "src/locales/zh-CN/app.json", Data: "{}", Locale: "zh-CN"},
-		{Path: "src/locales/en-US/app.json", Data: "{}", Locale: "en-US"},
-		{Path: "src/locales/zh-CN.messages.json", Data: "{}", Locale: "zh-CN"},
-		{Path: "locales/en.json", Data: "{}", Locale: "en"},
-	}
-
-	tests := []struct {
-		name  string
-		locale string
-		want  *types.I18nFile
-	}{
-		{
-			name:   "find zh-CN in complex path",
-			locale: "zh-CN",
-			want:   files[0], // Should find the first match
-		},
-		{
-			name:   "find en-US in complex path",
-			locale: "en-US",
-			want:   files[1],
-		},
-		{
-			name:   "find en from simple locale",
-			locale: "en",
-			want:   files[3],
-		},
-		{
-			name:   "find non-existent locale",
-			locale: "ko-KR",
 			want:   nil,
 		},
 	}

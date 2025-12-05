@@ -90,7 +90,10 @@ func TestLoadFile(t *testing.T) {
 				t.Fatalf("Failed to setup test: %v", err)
 			}
 
-			file, err := LoadFile(filePath, "", false)
+			// Use the absolute file path as the pattern to ensure a match
+			// Since these tests focus on JSON loading, not metadata extraction
+			pattern := filePath
+			file, err := LoadFile(filePath, pattern)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -219,19 +222,25 @@ func TestSaveAllFiles(t *testing.T) {
 			Data: mapToJSON(map[string]interface{}{
 				"welcome": "欢迎",
 			}),
+			Dirty: true,
 		},
 		{
 			Path: filepath.Join(tmpDir, "en-US.json"),
 			Data: mapToJSON(map[string]interface{}{
 				"welcome": "Welcome",
 			}),
+			Dirty: true,
 		},
 	}
 
-	err := SaveAllFiles(files)
+	count, err := SaveAllFiles(files)
 	if err != nil {
 		t.Errorf("SaveAllFiles() error = %v", err)
 		return
+	}
+
+	if count != 2 {
+		t.Errorf("SaveAllFiles() count = %d, want 2", count)
 	}
 
 	// Verify all files were created
@@ -262,12 +271,12 @@ func TestLoadAllFiles(t *testing.T) {
 
 	// Test loading all files
 	sources := []FileSource{
-		{Path: filepath.Join(tmpDir, "zh-CN.json")},
-		{Path: filepath.Join(tmpDir, "en-US.json")},
-		{Path: filepath.Join(tmpDir, "nonexistent.json")}, // This should not cause error
+		{Path: filepath.Join(tmpDir, "zh-CN.json"), Pattern: filepath.Join(tmpDir, "{{language}}.json")},
+		{Path: filepath.Join(tmpDir, "en-US.json"), Pattern: filepath.Join(tmpDir, "{{language}}.json")},
+		{Path: filepath.Join(tmpDir, "nonexistent.json"), Pattern: filepath.Join(tmpDir, "nonexistent.json")},
 	}
 
-	files, err := LoadAllFiles(sources, false)
+	files, err := LoadAllFiles(sources)
 	if err != nil {
 		t.Errorf("LoadAllFiles() error = %v", err)
 		return
