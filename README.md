@@ -1,5 +1,10 @@
 # i18nedt - AI ready i18n command line Editor
 
+
+<img src="https://vhs.charm.sh/vhs-7679XAOlVNk8aKWYU2joMZ.gif" alt="Made with VHS">
+
+
+
 A command-line tool for editing i18n JSON files with your favorite editor.
 
 ## Features
