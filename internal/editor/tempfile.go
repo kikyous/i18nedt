@@ -26,25 +26,64 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 
 	temp := &types.TempFile{
 		Path:    tempFileName,
-		Keys:    keys,
+		Keys:    keys, // Note: These are original requested keys
 		Locales: locales,
 		Content: make(map[string]map[string]*types.Value),
 		Deletes: []string{},
 	}
 
-	// Initialize content map
+	// Iterate over requested keys
 	for _, key := range keys {
-		temp.Content[key] = make(map[string]*types.Value)
-		for _, locale := range locales {
-			temp.Content[key][locale] = types.NewStringValue("")
-		}
-	}
+		// Check if the requested key implies a specific namespace
+		reqNs, reqKey := splitNamespaceKey(key)
 
-	// Load existing values from files
-	for _, key := range keys {
 		for _, file := range files {
-			if value, err := i18n.GetValueTyped(file.Data, key); err == nil {
-				temp.Content[key][file.Locale] = value
+			// If user requested a specific namespace, skip files that don't match
+			if reqNs != "" && file.Namespace != reqNs {
+				continue
+			}
+
+			// Determine the key to display in the editor
+			// If the file has a namespace, prepend it to the key
+			displayKey := reqKey
+			if file.Namespace != "" {
+				displayKey = file.Namespace + ":" + reqKey
+			}
+
+			// Initialize the content map for this display key if not present
+			if _, ok := temp.Content[displayKey]; !ok {
+				temp.Content[displayKey] = make(map[string]*types.Value)
+				// Initialize with empty values for all locales to ensure matrix is complete
+				for _, l := range locales {
+					temp.Content[displayKey][l] = types.NewStringValue("")
+				}
+			}
+
+			// Try to retrieve value from file
+			// We look up using the 'reqKey' (which is the key without namespace prefix if one was provided)
+			// But if reqNs was empty, reqKey is just the key.
+			// Correct logic: The key inside the file is always the "key part".
+			if value, err := i18n.GetValueTyped(file.Data, reqKey); err == nil {
+				// Only set if we found something? Or strictly set?
+				// GetValueTyped returns NewStringValue("") if not found (and no error if Valid JSON).
+				// But we want to know if it *exists*?
+				// Actually GetValueTyped uses gjson.Get.
+				// If we want to distinguish "empty string" from "missing", we might need check.
+				// But for now, just overwriting with what we found is fine.
+				// If it returns empty string for missing, we effectively propose adding it.
+				
+				// However, GetValueTyped implementation:
+				// result := gjson.Get(jsonStr, key)
+				// if !result.Exists() { return types.NewStringValue(""), nil }
+				// So it returns empty string if missing.
+				
+				// If we have multiple files for same locale (e.g. different namespaces), 
+				// loop ensures we pick the right one because we check file.Namespace above.
+				// But wait, 'locales' list contains ALL locales across ALL files.
+				// temp.Content[displayKey] has entries for ALL locales.
+				// We are assigning to temp.Content[displayKey][file.Locale].
+				// This is correct.
+				temp.Content[displayKey][file.Locale] = value
 			}
 		}
 	}
@@ -281,8 +320,15 @@ func CleanupTempFile(temp *types.TempFile) error {
 func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 	// Handle deletions
 	for _, keyToDelete := range temp.Deletes {
+		targetNs, targetKey := splitNamespaceKey(keyToDelete)
+
 		for _, file := range files {
-			newData, err := i18n.DeleteValue(file.Data, keyToDelete)
+			// Check if file matches namespace (empty targetNs matches empty file.Namespace)
+			if file.Namespace != targetNs {
+				continue
+			}
+
+			newData, err := i18n.DeleteValue(file.Data, targetKey)
 			if err == nil {
 				file.Data = newData
 			}
@@ -291,13 +337,20 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 
 	// Handle updates and additions
 	for key, localeValues := range temp.Content {
+		targetNs, targetKey := splitNamespaceKey(key)
+
 		for _, file := range files {
+			// Check if file matches namespace
+			if file.Namespace != targetNs {
+				continue
+			}
+
 			value, exists := localeValues[file.Locale]
 			if !exists {
 				continue // Skip if no value for this locale
 			}
 
-			newData, err := i18n.SetValueTyped(file.Data, key, value)
+			newData, err := i18n.SetValueTyped(file.Data, targetKey, value)
 			if err == nil {
 				file.Data = newData
 			}
@@ -305,6 +358,16 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 	}
 
 	return nil
+}
+
+// Helper function to split "namespace:key" into "namespace" and "key"
+// If no namespace, returns empty string and original key
+func splitNamespaceKey(compositeKey string) (string, string) {
+	parts := strings.SplitN(compositeKey, ":", 2)
+	if len(parts) == 2 {
+		return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+	}
+	return "", compositeKey
 }
 
 // Helper function to get file paths from I18nFile slice

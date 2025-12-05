@@ -12,8 +12,8 @@ import (
 
 func TestCreateTempFile(t *testing.T) {
 	files := []*types.I18nFile{
-		{Path: "zh-CN.json", Data: `{"welcome": "欢迎"}`},
-		{Path: "en-US.json", Data: `{"welcome": "Welcome"}`},
+		{Path: "zh-CN.json", Data: `{"welcome": "欢迎"}`, Locale: "zh-CN"},
+		{Path: "en-US.json", Data: `{"welcome": "Welcome"}`, Locale: "en-US"},
 	}
 
 	keys := []string{"home.welcome", "nav.home"}

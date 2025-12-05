@@ -60,12 +60,31 @@ func ParseLocaleFromPath(filePath string) (string, error) {
 	return name, nil
 }
 
-// GetLocaleList extracts locale codes from I18nFile structs
+// ParseNamespace extracts namespace from file path
+func ParseNamespace(filePath, locale string) string {
+	base := filepath.Base(filePath)
+	name := strings.TrimSuffix(base, filepath.Ext(base))
+
+	// If the filename (without extension) is the same as the locale,
+	// it's a root locale file (e.g. en.json), so namespace is empty.
+	if name == locale {
+		return ""
+	}
+
+	// Otherwise, the filename is the namespace (e.g. common.json in en/common.json)
+	return name
+}
+
+// GetLocaleList extracts unique locale codes from I18nFile structs
 func GetLocaleList(files []*types.I18nFile) ([]string, error) {
-	locales := make([]string, 0, len(files))
+	localeMap := make(map[string]bool)
+	locales := make([]string, 0)
 
 	for _, file := range files {
-		locales = append(locales, file.Locale)
+		if !localeMap[file.Locale] {
+			localeMap[file.Locale] = true
+			locales = append(locales, file.Locale)
+		}
 	}
 
 	return locales, nil

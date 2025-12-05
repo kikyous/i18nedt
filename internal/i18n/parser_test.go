@@ -90,7 +90,7 @@ func TestLoadFile(t *testing.T) {
 				t.Fatalf("Failed to setup test: %v", err)
 			}
 
-			file, err := LoadFile(filePath, false)
+			file, err := LoadFile(filePath, "", false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -261,25 +261,25 @@ func TestLoadAllFiles(t *testing.T) {
 	}
 
 	// Test loading all files
-	filePaths := []string{
-		filepath.Join(tmpDir, "zh-CN.json"),
-		filepath.Join(tmpDir, "en-US.json"),
-		filepath.Join(tmpDir, "nonexistent.json"), // This should not cause error
+	sources := []FileSource{
+		{Path: filepath.Join(tmpDir, "zh-CN.json")},
+		{Path: filepath.Join(tmpDir, "en-US.json")},
+		{Path: filepath.Join(tmpDir, "nonexistent.json")}, // This should not cause error
 	}
 
-	files, err := LoadAllFiles(filePaths, false)
+	files, err := LoadAllFiles(sources, false)
 	if err != nil {
 		t.Errorf("LoadAllFiles() error = %v", err)
 		return
 	}
 
-	if len(files) != len(filePaths) {
-		t.Errorf("LoadAllFiles() length = %v, want %v", len(files), len(filePaths))
+	if len(files) != len(sources) {
+		t.Errorf("LoadAllFiles() length = %v, want %v", len(files), len(sources))
 	}
 
 	for i, file := range files {
-		if file.Path != filePaths[i] {
-			t.Errorf("LoadAllFiles()[%d].Path = %v, want %v", i, file.Path, filePaths[i])
+		if file.Path != sources[i].Path {
+			t.Errorf("LoadAllFiles()[%d].Path = %v, want %v", i, file.Path, sources[i].Path)
 		}
 
 		if i < len(testFiles) {

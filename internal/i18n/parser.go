@@ -12,25 +12,39 @@ import (
 )
 
 // LoadFile loads and parses an i18n JSON file
-func LoadFile(filePath string, PathAsLocale bool) (*types.I18nFile, error) {
-	// Determine locale
-	var locale string
-	if PathAsLocale {
-		// Use full file path (including extension) as locale
-		locale = filePath
-	} else {
-		// Extract locale using BCP47 parsing or fallback
-		var err error
-		locale, err = ParseLocaleFromPath(filePath)
+func LoadFile(filePath string, pattern string, PathAsLocale bool) (*types.I18nFile, error) {
+	// Determine locale and namespace
+	var locale, namespace string
+	var err error
+
+	if pattern != "" {
+		// Use pattern-based extraction
+		locale, namespace, err = ExtractMetadataFromPath(filePath, pattern)
 		if err != nil {
-			return nil, fmt.Errorf("failed to extract locale from path %s: %w", filePath, err)
+			return nil, fmt.Errorf("failed to extract metadata from path %s using pattern %s: %w", filePath, pattern, err)
+		}
+	} else {
+		// Fallback to heuristic extraction
+		if PathAsLocale {
+			// Use full file path (including extension) as locale
+			locale = filePath
+			namespace = "" // PathAsLocale implies unique file per locale? Or just locale ID?
+		} else {
+			// Extract locale using BCP47 parsing or fallback
+			locale, err = ParseLocaleFromPath(filePath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to extract locale from path %s: %w", filePath, err)
+			}
+			
+			namespace = ParseNamespace(filePath, locale)
 		}
 	}
 
 	file := &types.I18nFile{
-		Path:   filePath,
-		Data:   "{}", // Default empty JSON object
-		Locale: locale,
+		Path:      filePath,
+		Data:      "{}", // Default empty JSON object
+		Locale:    locale,
+		Namespace: namespace,
 	}
 
 	// Check if file exists
@@ -108,12 +122,18 @@ func GetDirectory(filePath string) string {
 	return filepath.Dir(filePath)
 }
 
-// LoadAllFiles loads multiple i18n files
-func LoadAllFiles(filePaths []string, PathAsLocale bool) ([]*types.I18nFile, error) {
-	files := make([]*types.I18nFile, 0, len(filePaths))
+// FileSource represents a file to load and the pattern used to find it (if any)
+type FileSource struct {
+	Path    string
+	Pattern string
+}
 
-	for _, filePath := range filePaths {
-		file, err := LoadFile(filePath, PathAsLocale)
+// LoadAllFiles loads multiple i18n files
+func LoadAllFiles(sources []FileSource, PathAsLocale bool) ([]*types.I18nFile, error) {
+	files := make([]*types.I18nFile, 0, len(sources))
+
+	for _, src := range sources {
+		file, err := LoadFile(src.Path, src.Pattern, PathAsLocale)
 		if err != nil {
 			return nil, err
 		}

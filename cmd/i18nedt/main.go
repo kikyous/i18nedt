@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
-
 	"github.com/alexflint/go-arg"
-	"github.com/bmatcuk/doublestar/v4"
 	"github.com/kikyous/i18nedt/internal/editor"
 	"github.com/kikyous/i18nedt/internal/flatten"
 	"github.com/kikyous/i18nedt/internal/i18n"
@@ -51,41 +48,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Handle file expansion (globbing)
-	var finalFiles []string
-
-	// If no files specified, use environment variable
-	if len(args.Files) == 0 {
-		if envFiles := os.Getenv("I18NEDT_FILES"); envFiles != "" {
-			args.Files = strings.Fields(envFiles)
-		}
-	}
-
-	for _, pattern := range args.Files {
-		// Use doublestar for file globbing (supports {a,b} and **)
-		matches, err := doublestar.FilepathGlob(pattern)
-		if err == nil && len(matches) > 0 {
-			finalFiles = append(finalFiles, matches...)
-		} else {
-			// If no match or error, keep original (might be a new file or specific path)
-			// But if it contains glob characters and failed to match, maybe we shouldn't add it if we want strict behavior?
-			// The original code: if err == nil && len(matches) > 0 { append matches } else { append pattern }
-			// So if I pass "*.json" and it matches nothing, it appends "*.json".
-			// Then LoadAllFiles will try to open "*.json" and fail.
-			// But here "at least one file must be specified" check is after this loop.
-			// So finalFiles should not be empty if args.Files is not empty.
-			finalFiles = append(finalFiles, pattern)
-		}
-	}
-
-	if len(finalFiles) == 0 {
-		fmt.Fprintf(os.Stderr, "Error: at least one file must be specified (use command line arguments or I18NEDT_FILES environment variable)\n")
+	// Handle file expansion (globbing) via discovery module
+	sources, flatFiles, err := i18n.DiscoverFiles(args.Files)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Construct Config
 	config := &types.Config{
-		Files:        finalFiles,
+		Files:        flatFiles, // We keep this for Flatten logic which iterates simple paths
 		Keys:         args.Keys,
 		Editor:       os.Getenv("EDITOR"),
 		PrintOnly:    args.PrintOnly,
@@ -116,7 +88,7 @@ func main() {
 	}
 
 	// Load all i18n files
-	files, err := i18n.LoadAllFiles(config.Files, config.PathAsLocale)
+	files, err := i18n.LoadAllFiles(sources, config.PathAsLocale)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
 		os.Exit(1)

@@ -130,7 +130,7 @@ func TestGetLocaleList(t *testing.T) {
 		{
 			name:      "duplicate locales",
 			filePaths: []string{"zh-CN.json", "zh-CN.messages.json"},
-			want:      []string{"zh-CN", "zh-CN"},
+			want:      []string{"zh-CN"},
 			wantErr:   false,
 		},
 		{
@@ -150,7 +150,11 @@ func TestGetLocaleList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create I18nFile structs first
-			files, err := LoadAllFiles(tt.filePaths, false)
+			sources := make([]FileSource, len(tt.filePaths))
+			for i, path := range tt.filePaths {
+				sources[i] = FileSource{Path: path}
+			}
+			files, err := LoadAllFiles(sources, false)
 			if err != nil {
 				t.Errorf("LoadAllFiles() error = %v", err)
 				return
