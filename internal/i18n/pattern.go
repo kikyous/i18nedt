@@ -81,3 +81,23 @@ func ExtractMetadataFromPath(path, pattern string) (string, string, error) {
 
 	return result["locale"], result["namespace"], nil
 }
+
+// ConstructPathFromMetadata constructs a file path from a pattern and metadata
+func ConstructPathFromMetadata(pattern, locale, namespace string) string {
+	path := pattern
+	path = strings.ReplaceAll(path, "{{language}}", locale)
+	path = strings.ReplaceAll(path, "{{locale}}", locale)
+	path = strings.ReplaceAll(path, "{{namespace}}", namespace)
+	path = strings.ReplaceAll(path, "{{ns}}", namespace)
+	return path
+}
+
+// HasNamespacePlaceholder checks if the pattern contains a namespace placeholder
+func HasNamespacePlaceholder(pattern string) bool {
+	return strings.Contains(pattern, "{{namespace}}") || strings.Contains(pattern, "{{ns}}")
+}
+
+// HasLocalePlaceholder checks if the pattern contains a locale placeholder
+func HasLocalePlaceholder(pattern string) bool {
+	return strings.Contains(pattern, "{{language}}") || strings.Contains(pattern, "{{locale}}")
+}
