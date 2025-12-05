@@ -186,6 +186,46 @@ i18nedt src/locales/**/*/common.json -k welcome
 i18nedt locales/zh-CN.json locales/en-US.json -k welcome
 ```
 
+## Working with Namespaces
+
+`i18nedt` supports working with internationalization files organized by namespaces, which often correspond to different modules or sections of an application. To enable namespace support, your file path patterns must include the `{{ns}}` (or `{{namespace}}`) placeholder in addition to the `{{language}}` (or `{{locale}}`) placeholder.
+
+For example:
+
+```bash
+# Pattern to discover files like:
+# locales/en-US/common.json
+# locales/zh-CN/auth.json
+i18nedt "locales/{{language}}/{{ns}}.json" -k common:home.title
+```
+
+When specifying keys, you can prepend the namespace to the key using a colon (`:`):
+
+```bash
+# Edit the 'home.title' key within the 'common' namespace
+i18nedt "locales/{{language}}/{{ns}}.json" -k common:home.title
+
+# Edit the 'welcome' key within the 'auth' namespace
+i18nedt "locales/{{language}}/{{ns}}.json" -k auth:welcome
+```
+
+### Automatic Namespace Creation
+
+If you specify a key for a namespace that does not yet have corresponding files, `i18nedt` will automatically detect this and prepare to create the necessary files.
+
+For example, if you run:
+
+```bash
+i18nedt "locales/{{language}}/{{ns}}.json" -k newModule:title.greeting
+```
+
+And files for `newModule` (e.g., `locales/en-US/newModule.json`, `locales/zh-CN/newModule.json`) do not exist, `i18nedt` will:
+1. Print a message indicating it's "Creating new namespace: newModule".
+2. Include the `newModule:title.greeting` key in the temporary editor file.
+3. Upon saving your changes in the editor, `i18nedt` will create the `newModule.json` files in the appropriate locale directories (`locales/en-US/newModule.json`, `locales/zh-CN/newModule.json`, etc.) with the new key and its translated value.
+
+This functionality relies on having a pattern with both `{{language}}` (or `{{locale}}`) and `{{ns}}` (or `{{namespace}}`) placeholders. If no such pattern is provided, automatic namespace creation will not be possible.
+
 ## Locale Detection
 
 i18nedt automatically detects locale codes from file names:
