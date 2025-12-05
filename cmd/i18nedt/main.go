@@ -70,25 +70,7 @@ func main() {
 
 	// Handle flatten mode
 	if config.Flatten {
-		// Flatten each file
-		for _, source := range sources {
-			var namespace string
-			// Determine namespace
-			if source.Pattern != "" {
-				_, ns, err := i18n.ExtractMetadataFromPath(source.Path, source.Pattern)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Warning: failed to extract metadata from %s: %v\n", source.Path, err)
-				} else {
-					namespace = ns
-				}
-			}
-			// If pattern is empty, namespace remains empty (non-ns mode)
-
-			if err := flatten.FlattenJSON(source.Path, namespace); err != nil {
-				fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", source.Path, err)
-				os.Exit(1)
-			}
-		}
+		runFlatten(sources)
 		return
 	}
 
@@ -98,6 +80,32 @@ func main() {
 		os.Exit(1)
 	}
 
+	runEditor(config, sources)
+}
+
+func runFlatten(sources []types.FileSource) {
+	// Flatten each file
+	for _, source := range sources {
+		var namespace string
+		// Determine namespace
+		if source.Pattern != "" {
+			_, ns, err := i18n.ExtractMetadataFromPath(source.Path, source.Pattern)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to extract metadata from %s: %v\n", source.Path, err)
+			} else {
+				namespace = ns
+			}
+		}
+		// If pattern is empty, namespace remains empty (non-ns mode)
+
+		if err := flatten.FlattenJSON(source.Path, namespace); err != nil {
+			fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", source.Path, err)
+			os.Exit(1)
+		}
+	}
+}
+
+func runEditor(config *types.Config, sources []types.FileSource) {
 	// Load all i18n files
 	files, err := i18n.LoadAllFiles(sources)
 	if err != nil {
