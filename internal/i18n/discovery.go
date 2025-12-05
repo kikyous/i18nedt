@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/kikyous/i18nedt/pkg/types"
 )
 
 // DiscoverFiles finds all files matching the given patterns or globs.
 // It returns a slice of FileSource for loading and a slice of flat file paths for legacy support (flatten).
-func DiscoverFiles(patterns []string) ([]FileSource, []string, error) {
-	var sources []FileSource
+func DiscoverFiles(patterns []string) ([]types.FileSource, []string, error) {
+	var sources []types.FileSource
 	var flatFiles []string
 
 	// If no patterns provided, check environment variable
@@ -44,7 +45,7 @@ func DiscoverFiles(patterns []string) ([]FileSource, []string, error) {
 		matches, err := doublestar.FilepathGlob(globPattern)
 		if err == nil && len(matches) > 0 {
 			for _, match := range matches {
-				sources = append(sources, FileSource{
+				sources = append(sources, types.FileSource{
 					Path:    match,
 					Pattern: extractionPattern,
 				})
@@ -52,7 +53,7 @@ func DiscoverFiles(patterns []string) ([]FileSource, []string, error) {
 			}
 		} else {
 			// If no match, add the original arg (globPattern) as path
-			sources = append(sources, FileSource{
+			sources = append(sources, types.FileSource{
 				Path:    globPattern,
 				Pattern: extractionPattern,
 			})

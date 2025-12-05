@@ -119,14 +119,8 @@ func GetDirectory(filePath string) string {
 	return filepath.Dir(filePath)
 }
 
-// FileSource represents a file to load and the pattern used to find it (if any)
-type FileSource struct {
-	Path    string
-	Pattern string
-}
-
 // LoadAllFiles loads multiple i18n files
-func LoadAllFiles(sources []FileSource) ([]*types.I18nFile, error) {
+func LoadAllFiles(sources []types.FileSource) ([]*types.I18nFile, error) {
 	files := make([]*types.I18nFile, 0, len(sources))
 
 	for _, src := range sources {

@@ -270,7 +270,7 @@ func TestLoadAllFiles(t *testing.T) {
 	}
 
 	// Test loading all files
-	sources := []FileSource{
+	sources := []types.FileSource{
 		{Path: filepath.Join(tmpDir, "zh-CN.json"), Pattern: filepath.Join(tmpDir, "{{language}}.json")},
 		{Path: filepath.Join(tmpDir, "en-US.json"), Pattern: filepath.Join(tmpDir, "{{language}}.json")},
 		{Path: filepath.Join(tmpDir, "nonexistent.json"), Pattern: filepath.Join(tmpDir, "nonexistent.json")},

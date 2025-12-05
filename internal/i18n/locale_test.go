@@ -148,30 +148,30 @@ func TestGetLocaleList(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Create I18nFile structs first
-			sources := make([]FileSource, len(tt.filePaths))
-			for i, path := range tt.filePaths {
-				// Default pattern
-				pattern := "{{language}}.json"
-				
-				// Adjust pattern based on file extension/structure for test cases
-				if strings.HasSuffix(path, ".txt") {
-					pattern = "{{language}}.txt"
-				} else if strings.Contains(path, ".messages.json") {
-					pattern = "{{language}}.messages.json"
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				// Create I18nFile structs first
+				sources := make([]types.FileSource, len(tt.filePaths))
+				for i, path := range tt.filePaths {
+					// Default pattern
+					pattern := "{{language}}.json"
+	
+					// Adjust pattern based on file extension/structure for test cases
+					if strings.HasSuffix(path, ".txt") {
+						pattern = "{{language}}.txt"
+					} else if strings.Contains(path, ".messages.json") {
+						pattern = "{{language}}.messages.json"
+					}
+	
+					sources[i] = types.FileSource{Path: path, Pattern: pattern}
 				}
-				
-				sources[i] = FileSource{Path: path, Pattern: pattern}
-			}
-			files, err := LoadAllFiles(sources)
-			if err != nil {
-				t.Errorf("LoadAllFiles() error = %v", err)
-				return
-			}
+				files, err := LoadAllFiles(sources)
+				if err != nil {
+					t.Errorf("LoadAllFiles() error = %v", err)
+					return
+				}
 
-			got, err := GetLocaleList(files)
+				got, err := GetLocaleList(files)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetLocaleList() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -62,6 +62,12 @@ type KeyOperation struct {
 	Delete bool
 }
 
+// FileSource represents a file to load and the pattern used to find it (if any)
+type FileSource struct {
+	Path    string
+	Pattern string
+}
+
 // NewConfig creates a new configuration with defaults
 func NewConfig() *Config {
 	editor := os.Getenv("EDITOR")

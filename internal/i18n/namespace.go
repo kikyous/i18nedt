@@ -9,7 +9,7 @@ import (
 
 // CreateMissingNamespaces checks for requested namespaces that don't exist and creates them if possible.
 // It returns the updated list of files and a list of created namespace names.
-func CreateMissingNamespaces(files []*types.I18nFile, sources []FileSource, keys []string) ([]*types.I18nFile, []string, error) {
+func CreateMissingNamespaces(files []*types.I18nFile, sources []types.FileSource, keys []string) ([]*types.I18nFile, []string, error) {
 	// Identify existing namespaces
 	existingNs := make(map[string]bool)
 	for _, f := range files {
