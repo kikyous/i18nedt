@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/kikyous/i18nedt/internal/editor"
@@ -107,55 +106,12 @@ func main() {
 	}
 
 	// Check for requested namespaces that don't exist and create them if possible
-	existingNs := make(map[string]bool)
-	for _, f := range files {
-		existingNs[f.Namespace] = true
+	files, createdNs, err := i18n.CreateMissingNamespaces(files, sources, config.Keys)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 	}
-
-	missingNs := make(map[string]bool)
-	for _, key := range config.Keys {
-		if strings.Contains(key, ":") {
-			parts := strings.SplitN(key, ":", 2)
-			ns := parts[0]
-			if ns != "" && !existingNs[ns] {
-				missingNs[ns] = true
-			}
-		}
-	}
-
-	if len(missingNs) > 0 {
-		// Find a suitable pattern for creating new files
-		var templatePattern string
-		for _, src := range sources {
-			if i18n.HasNamespacePlaceholder(src.Pattern) && i18n.HasLocalePlaceholder(src.Pattern) {
-				templatePattern = src.Pattern
-				break
-			}
-		}
-
-		if templatePattern != "" {
-			locales, _ := i18n.GetLocaleList(files)
-			if len(locales) == 0 {
-				fmt.Fprintf(os.Stderr, "Warning: cannot create new namespaces because no existing locales found.\n")
-			} else {
-				for ns := range missingNs {
-					fmt.Printf("Creating new namespace: %s\n", ns)
-					for _, loc := range locales {
-						path := i18n.ConstructPathFromMetadata(templatePattern, loc, ns)
-						newFile := &types.I18nFile{
-							Path:      path,
-							Data:      "{}",
-							Locale:    loc,
-							Namespace: ns,
-							Dirty:     false, // Will be set to true if edited
-						}
-						files = append(files, newFile)
-					}
-				}
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Warning: cannot create new namespaces because no pattern with {{ns}} and {{language}} placeholders was found.\n")
-		}
+	for _, ns := range createdNs {
+		fmt.Printf("Creating new namespace: %s\n", ns)
 	}
 
 	// Use keys directly without expansion - user explicitly specifies what to edit
