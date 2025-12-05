@@ -201,6 +201,31 @@ i18nedt -k welcome
 recommend using `direnv` to automatic set different I18NEDT_FILES for different projects.
 
 
+### Fuzzy Finding with fzf
+
+You can integrate `i18nedt` with `fzf` for an interactive key selection experience. First, ensure you have `fzf` installed. Then, add the following alias to your shell configuration (e.g., `.bashrc`, `.zshrc`):
+
+```bash
+export I18NEDT_FILES="src/locales/*.json"   ## this ENV is required
+
+alias fi18n="i18nedt -f | fzf \
+     --bind 'enter:become:i18nedt -k {1}' \
+     --bind 'ctrl-o:execute:i18nedt -k {1}' \
+     --bind 'ctrl-x:become:i18nedt -k {q}' \
+     --delimiter = --preview 'i18nedt -p -a -k {1}' \
+     --preview-window '<80(up):wrap' --bind '?:toggle-preview'"
+```
+
+
+
+This alias allows you to:
+-   Interactively fuzzy search keys.
+-   Press `Enter` to edit the selected key.
+-   Press `Ctrl-o` to edit the selected key and immediately open your editor.
+-   Press `Ctrl-x` to edit a custom key (using your `fzf` query as the key).
+-   Preview the content of the selected key (`i18nedt -p -a -k {1}`).
+
+
 ## Working with Namespaces
 
 `i18nedt` supports working with internationalization files organized by namespaces, which often correspond to different modules or sections of an application. To enable namespace support, your file path patterns must include the `{{ns}}` (or `{{namespace}}`) placeholder in addition to the `{{language}}` (or `{{locale}}`) placeholder.
