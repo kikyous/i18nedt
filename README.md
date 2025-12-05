@@ -186,6 +186,16 @@ i18nedt src/locales/**/*/common.json -k welcome
 i18nedt locales/zh-CN.json locales/en-US.json -k welcome
 ```
 
+Alternatively, you can set the `I18NEDT_FILES` environment variable with a glob pattern for your i18n files. This allows you to omit the file paths from the command line:
+
+```bash
+export I18NEDT_FILES="src/locales/*.json"
+i18nedt -k welcome
+```
+
+recommend using `direnv` to automatic set different I18NEDT_FILES for different projects.
+
+
 ## Working with Namespaces
 
 `i18nedt` supports working with internationalization files organized by namespaces, which often correspond to different modules or sections of an application. To enable namespace support, your file path patterns must include the `{{ns}}` (or `{{namespace}}`) placeholder in addition to the `{{language}}` (or `{{locale}}`) placeholder.
