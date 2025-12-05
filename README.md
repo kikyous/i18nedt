@@ -1,7 +1,7 @@
 # i18nedt - AI ready i18n command line Editor
 
 
-<img src="https://vhs.charm.sh/vhs-7679XAOlVNk8aKWYU2joMZ.gif" alt="Made with VHS">
+<img src="https://vhs.charm.sh/vhs-2CTMxsib9GPXzJH64Bxsjg.gif" alt="Made with VHS">
 
 
 
