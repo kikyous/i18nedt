@@ -28,6 +28,7 @@ var args struct {
 	NoTips    bool     `arg:"-a,--no-tips,env" help:"Exclude AI tips from temporary file content"`
 	Doctor    bool     `arg:"-d,--doctor" help:"Check for missing and empty keys"`
 	Flatten   bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
+	Separator string   `arg:"-s,--separator,env:SEPARATOR" default:":" help:"Namespace separator (default: ':')"`
 	Version   bool     `arg:"-v,--version" help:"Show version information"`
 	Files     []string `arg:"positional" help:"Target file paths [env: I18NEDT_FILES]"`
 }
@@ -67,6 +68,7 @@ func main() {
 		NoTips:    args.NoTips,
 		Flatten:   args.Flatten,
 		Doctor:    args.Doctor,
+		Separator: args.Separator,
 	}
 	if config.Editor == "" {
 		config.Editor = "vim"
@@ -74,13 +76,13 @@ func main() {
 
 	// Handle doctor mode
 	if config.Doctor {
-		runDoctor(sources, config.Flatten)
+		runDoctor(sources, config.Flatten, config.Separator)
 		return
 	}
 
 	// Handle flatten mode
 	if config.Flatten {
-		runFlatten(sources)
+		runFlatten(sources, config.Separator)
 		return
 	}
 
@@ -93,7 +95,7 @@ func main() {
 	runEditor(config, sources)
 }
 
-func runDoctor(sources []types.FileSource, simple bool) {
+func runDoctor(sources []types.FileSource, simple bool, separator string) {
 	// Load all i18n files
 	files, err := i18n.LoadAllFiles(sources)
 	if err != nil {
@@ -101,7 +103,7 @@ func runDoctor(sources []types.FileSource, simple bool) {
 		os.Exit(1)
 	}
 
-	foundIssues, err := doctor.Run(files, simple)
+	foundIssues, err := doctor.Run(files, simple, separator)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error running doctor check: %v\n", err)
 		os.Exit(1)
@@ -112,7 +114,7 @@ func runDoctor(sources []types.FileSource, simple bool) {
 	}
 }
 
-func runFlatten(sources []types.FileSource) {
+func runFlatten(sources []types.FileSource, separator string) {
 	// Load all i18n files
 	files, err := i18n.LoadAllFiles(sources)
 	if err != nil {
@@ -122,7 +124,7 @@ func runFlatten(sources []types.FileSource) {
 
 	// Flatten each file
 	for _, file := range files {
-		flat, err := flatten.FlattenJSON([]byte(file.Data), file.Namespace)
+		flat, err := flatten.FlattenJSON([]byte(file.Data), file.Namespace, separator)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", file.Path, err)
 			os.Exit(1)
@@ -150,7 +152,7 @@ func runEditor(config *types.Config, sources []types.FileSource) {
 	}
 
 	// Check for requested namespaces that don't exist and create them if possible
-	files, createdNs, err := i18n.CreateMissingNamespaces(files, sources, config.Keys)
+	files, createdNs, err := i18n.CreateMissingNamespaces(files, sources, config.Keys, config.Separator)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 	}
@@ -159,7 +161,7 @@ func runEditor(config *types.Config, sources []types.FileSource) {
 	}
 
 	// Use keys directly without expansion - user explicitly specifies what to edit
-	tempFile, err := editor.CreateTempFile(files, config.Keys)
+	tempFile, err := editor.CreateTempFile(files, config.Keys, config.Separator)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating temporary file: %v\n", err)
 		os.Exit(1)

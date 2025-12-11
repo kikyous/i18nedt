@@ -29,7 +29,7 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	results, err := Check(files)
+	results, err := Check(files, ":")
 	if err != nil {
 		t.Fatalf("Check failed: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestCheck_Namespaces(t *testing.T) {
 		},
 	}
 
-	results, err := Check(files)
+	results, err := Check(files, ":")
 	if err != nil {
 		t.Fatalf("Check failed: %v", err)
 	}

@@ -18,7 +18,7 @@ func TestCreateTempFile(t *testing.T) {
 
 	keys := []string{"home.welcome", "nav.home"}
 
-	temp, err := CreateTempFile(files, keys)
+	temp, err := CreateTempFile(files, keys, ":")
 	if err != nil {
 		t.Fatalf("CreateTempFile() error = %v", err)
 	}
@@ -300,7 +300,8 @@ func TestApplyChanges(t *testing.T) {
 				"en-US": types.NewStringValue("New value"),
 			},
 		},
-		Deletes: []string{"old"},
+		Deletes:   []string{"old"},
+		Separator: ":",
 	}
 
 	err := ApplyChanges(files, temp)

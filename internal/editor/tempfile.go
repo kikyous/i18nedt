@@ -14,7 +14,7 @@ import (
 )
 
 // CreateTempFile creates a temporary file for editing
-func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, error) {
+func CreateTempFile(files []*types.I18nFile, keys []string, separator string) (*types.TempFile, error) {
 	// Get locale list from I18nFile structs
 	locales, err := i18n.GetLocaleList(files)
 	if err != nil {
@@ -25,17 +25,18 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 	tempFileName := fmt.Sprintf(".i18nedt-%d.md", time.Now().Unix())
 
 	temp := &types.TempFile{
-		Path:    tempFileName,
-		Keys:    keys, // Note: These are original requested keys
-		Locales: locales,
-		Content: make(map[string]map[string]*types.Value),
-		Deletes: []string{},
+		Path:      tempFileName,
+		Keys:      keys, // Note: These are original requested keys
+		Locales:   locales,
+		Content:   make(map[string]map[string]*types.Value),
+		Deletes:   []string{},
+		Separator: separator,
 	}
 
 	// Iterate over requested keys
 	for _, key := range keys {
 		// Check if the requested key implies a specific namespace
-		reqNs, reqKey := splitNamespaceKey(key)
+		reqNs, reqKey := splitNamespaceKey(key, separator)
 
 		for _, file := range files {
 			// If user requested a specific namespace, skip files that don't match
@@ -47,7 +48,7 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 			// If the file has a namespace, prepend it to the key
 			displayKey := reqKey
 			if file.Namespace != "" {
-				displayKey = file.Namespace + ":" + reqKey
+				displayKey = file.Namespace + separator + reqKey
 			}
 
 			// Initialize the content map for this display key if not present
@@ -71,13 +72,13 @@ func CreateTempFile(files []*types.I18nFile, keys []string) (*types.TempFile, er
 				// If we want to distinguish "empty string" from "missing", we might need check.
 				// But for now, just overwriting with what we found is fine.
 				// If it returns empty string for missing, we effectively propose adding it.
-				
+
 				// However, GetValueTyped implementation:
 				// result := gjson.Get(jsonStr, key)
 				// if !result.Exists() { return types.NewStringValue(""), nil }
 				// So it returns empty string if missing.
-				
-				// If we have multiple files for same locale (e.g. different namespaces), 
+
+				// If we have multiple files for same locale (e.g. different namespaces),
 				// loop ensures we pick the right one because we check file.Namespace above.
 				// But wait, 'locales' list contains ALL locales across ALL files.
 				// temp.Content[displayKey] has entries for ALL locales.
@@ -320,7 +321,7 @@ func CleanupTempFile(temp *types.TempFile) error {
 func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 	// Handle deletions
 	for _, keyToDelete := range temp.Deletes {
-		targetNs, targetKey := splitNamespaceKey(keyToDelete)
+		targetNs, targetKey := splitNamespaceKey(keyToDelete, temp.Separator)
 
 		for _, file := range files {
 			// Check if file matches namespace (empty targetNs matches empty file.Namespace)
@@ -338,7 +339,7 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 
 	// Handle updates and additions
 	for key, localeValues := range temp.Content {
-		targetNs, targetKey := splitNamespaceKey(key)
+		targetNs, targetKey := splitNamespaceKey(key, temp.Separator)
 
 		for _, file := range files {
 			// Check if file matches namespace
@@ -370,8 +371,8 @@ func ApplyChanges(files []*types.I18nFile, temp *types.TempFile) error {
 
 // Helper function to split "namespace:key" into "namespace" and "key"
 // If no namespace, returns empty string and original key
-func splitNamespaceKey(compositeKey string) (string, string) {
-	parts := strings.SplitN(compositeKey, ":", 2)
+func splitNamespaceKey(compositeKey, separator string) (string, string) {
+	parts := strings.SplitN(compositeKey, separator, 2)
 	if len(parts) == 2 {
 		return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
 	}

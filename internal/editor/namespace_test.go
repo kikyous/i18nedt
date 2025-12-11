@@ -23,17 +23,18 @@ func TestNamespaceSupport(t *testing.T) {
 		},
 	}
 
-	// 1. Test CreateTempFile
-	// We ask for "hello" (ambiguous) and "auth:login" (specific)
-	keys := []string{"hello", "auth:login"}
-	temp, err := CreateTempFile(files, keys)
+	keys := []string{"common:hello", "auth:login"}
+
+	// Create temporary file with requested keys
+	// Note: CreateTempFile uses the file list to know valid locales and existing values
+	temp, err := CreateTempFile(files, keys, ":")
 	if err != nil {
 		t.Fatalf("CreateTempFile failed: %v", err)
 	}
 
 	// Check content
 	// "hello" -> should match common (found) and auth (not found, so empty)
-	
+
 	// Verify common:hello
 	if inner, ok := temp.Content["common:hello"]; !ok {
 		t.Error("common:hello key missing from temp file")
@@ -64,7 +65,8 @@ func TestNamespaceSupport(t *testing.T) {
 				"en": types.NewStringValue("new value"),
 			},
 		},
-		Deletes: []string{"auth:login"},
+		Deletes:   []string{"auth:login"},
+		Separator: ":",
 	}
 
 	err = ApplyChanges(files, tempUpdate)

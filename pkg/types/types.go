@@ -36,6 +36,7 @@ type Config struct {
 	NoTips    bool
 	Flatten   bool
 	Doctor    bool
+	Separator string
 }
 
 // I18nFile represents a single i18n JSON file
@@ -49,11 +50,12 @@ type I18nFile struct {
 
 // TempFile represents the temporary edit file
 type TempFile struct {
-	Path    string
-	Keys    []string
-	Locales []string
-	Content map[string]map[string]*Value // key -> locale -> *Value
-	Deletes []string                     // keys to delete
+	Path      string
+	Keys      []string
+	Locales   []string
+	Content   map[string]map[string]*Value // key -> locale -> *Value
+	Deletes   []string                     // keys to delete
+	Separator string
 }
 
 // KeyOperation represents an operation to perform on a key

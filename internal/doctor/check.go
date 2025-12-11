@@ -17,8 +17,8 @@ type CheckResult struct {
 
 // Run executes the doctor check on the provided files and prints the report
 // Returns true if issues were found, false otherwise
-func Run(files []*types.I18nFile, simple bool) (bool, error) {
-	results, err := Check(files)
+func Run(files []*types.I18nFile, simple bool, separator string) (bool, error) {
+	results, err := Check(files, separator)
 	if err != nil {
 		return false, err
 	}
@@ -93,7 +93,7 @@ func Run(files []*types.I18nFile, simple bool) (bool, error) {
 }
 
 // Check performs the analysis and returns results
-func Check(files []*types.I18nFile) (map[string]CheckResult, error) {
+func Check(files []*types.I18nFile, separator string) (map[string]CheckResult, error) {
 	results := make(map[string]CheckResult)
 
 	// Group files by Namespace
@@ -115,7 +115,7 @@ func Check(files []*types.I18nFile) (map[string]CheckResult, error) {
 		fileFlats := make(map[string]map[string]string) // Locale -> FlatMap
 
 		for locale, file := range localeFiles {
-			flat, err := flatten.FlattenJSON([]byte(file.Data), file.Namespace)
+			flat, err := flatten.FlattenJSON([]byte(file.Data), file.Namespace, separator)
 			if err != nil {
 				return nil, fmt.Errorf("failed to flatten file %s: %w", file.Path, err)
 			}

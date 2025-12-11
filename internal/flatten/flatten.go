@@ -8,7 +8,7 @@ import (
 )
 
 // FlattenJSON flattens JSON data and returns key-value pairs
-func FlattenJSON(data []byte, namespace string) (map[string]string, error) {
+func FlattenJSON(data []byte, namespace, separator string) (map[string]string, error) {
 	// Parse JSON into interface{}
 	var result interface{}
 	if err := json.Unmarshal(data, &result); err != nil {
@@ -18,7 +18,7 @@ func FlattenJSON(data []byte, namespace string) (map[string]string, error) {
 	// Determine prefix
 	prefix := ""
 	if namespace != "" {
-		prefix = namespace + ":"
+		prefix = namespace + separator
 	}
 
 	// Start recursive traversal and output

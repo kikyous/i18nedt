@@ -10,6 +10,8 @@ It is specifically designed to be **AI-friendly**, making it effortless to gener
 
 - [Features](#features)
 - [Installation](#installation)
+    - [From Source (Recommended for developers)](#from-source-recommended-for-developers)
+    - [Using Go Install](#using-go-install)
 - [Quick Start](#quick-start)
 - [The Editing Format](#the-editing-format)
     - [Basic Editing](#basic-editing)
@@ -18,6 +20,7 @@ It is specifically designed to be **AI-friendly**, making it effortless to gener
     - [Renaming Keys](#renaming-keys)
 - [Key Selection Syntax](#key-selection-syntax)
 - [AI Workflow](#ai-workflow)
+- [Doctor Mode](#doctor-mode)
 - [Advanced Configuration](#advanced-configuration)
     - [Editor Configuration](#editor-configuration)
     - [File Selection & Glob Patterns](#file-selection--glob-patterns)
@@ -173,6 +176,33 @@ The file header acts as a system prompt. You can also copy the entire content in
 
 ![AI Ready](ai-ready.png)
 
+## Doctor Mode
+
+`i18nedt` includes a doctor mode to help you maintain the health of your translation files. It scans your files for:
+
+- **Missing Keys**: Keys present in some locale files but missing in others.
+- **Empty Values**: Keys that exist but have an empty string `""` as their value.
+
+To run the check:
+
+```bash
+i18nedt --doctor src/locales/*.json
+# or short flag
+i18nedt -d src/locales/*.json
+```
+
+If issues are found, `i18nedt` will report them grouped by file and exit with a non-zero status code, making it suitable for CI/CD pipelines.
+
+**Interactive Fix Mode:**
+You can combine `--doctor` with `--flatten` to output a simple list of problematic keys, which can be piped into tools like `fzf` or `xargs`, see `Fuzzy Finding with fzf` below.
+
+```bash
+# List only problematic keys
+i18nedt -d -f src/locales/*.json
+```
+
+
+
 ## Advanced Configuration
 
 ### Editor Configuration
@@ -229,13 +259,21 @@ i18nedt ... -k common:home.title
 i18nedt ... -k auth:login
 ```
 
+**Custom Separator:**
+By default, the namespace separator is `:`. You can change this using the `--separator` (or `-s`) flag or `I18NEDT_SEPARATOR` environment variable.
+
+```bash
+# Use dot separator
+i18nedt --separator "." -k common.home.title
+```
+
 **Automatic Namespace Creation:**
 If you reference a namespace that doesn't exist (e.g., `-k newPage:title`), `i18nedt` will automatically create the corresponding JSON files (e.g., `locales/en/newPage.json`) upon saving.
 
 ## CLI Reference
 
 ```text
-Usage: i18nedt [--key KEY] [--print] [--no-tips] [--flatten] [--version] [FILES]
+Usage: i18nedt [--key KEY] [--print] [--no-tips] [--doctor] [--flatten] [--separator SEPARATOR] [--version] [FILES]
 
 Positional arguments:
   FILES                  Target file paths [env: I18NEDT_FILES]
@@ -244,7 +282,10 @@ Options:
   --key KEY, -k KEY      Key to edit (can be specified multiple times)
   --print, -p            Print temporary file content without launching editor
   --no-tips, -a          Exclude AI tips from temporary file content
+  --doctor, -d           Check for missing and empty keys
   --flatten, -f          Flatten JSON files to key=value format
+  --separator SEPARATOR, -s SEPARATOR
+                         Namespace separator (default: ':') [env: I18NEDT_SEPARATOR]
   --version, -v          Show version information
   --help, -h             display this help and exit
 ```
@@ -259,17 +300,27 @@ Combine `i18nedt` with `fzf` for an interactive translation experience. Add this
 # Requirement: I18NEDT_FILES must be set
 export I18NEDT_FILES="src/locales/*.json"
 
-alias fi18n="i18nedt -f | fzf \
-     --bind 'enter:become:i18nedt -k {1}' \
-     --bind 'ctrl-o:execute:i18nedt -k {1}' \
+fi18n() {
+  # 1. i18nedt -f "$@" : Pass arguments to i18nedt (e.g., -d)
+  # 2. fzf -m          : Enable multi-selection (TAB key)
+  # 3. {+1}            : Returns space-separated list of selected keys (e.g., "key1 key2")
+  # 4. printf          : Formats each key with "-k" prefix
+  #    "-k %s " applied to "key1 key2" results in "-k key1 -k key2 "
+  # 5. i18nedt $(...)  : Executes i18nedt with the constructed flags
+  i18nedt -f "$@" | fzf -m \
+     --bind 'enter:become:i18nedt $(printf -- "-k %s " {+1})' \
+     --bind 'ctrl-o:execute:i18nedt $(printf -- "-k %s " {+1})' \
      --bind 'ctrl-x:become:i18nedt -k {q}' \
      --delimiter = --preview 'i18nedt -p -a -k {1}' \
-     --preview-window '<80(up):wrap' --bind '?:toggle-preview'"
+     --preview-window '<80(up):wrap' --bind '?:toggle-preview'
+}
 ```
 
 **Usage:**
 - Run `fi18n` to search keys.
-- `Enter`: Edit selected key.
+- Run `fi18n -d` to search only problematic keys (missing or empty).
+- `Tab`: Select multiple keys to edit together.
+- `Enter`: Edit selected key(s).
 - `Ctrl-x`: Create/Edit a new key using your search query.
 - `?`: Toggle preview of values.
 
