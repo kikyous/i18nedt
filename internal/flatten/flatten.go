@@ -7,18 +7,12 @@ import (
 	"sort"
 )
 
-// FlattenJSON flattens a JSON file and outputs key-value pairs
-func FlattenJSON(filePath, namespace string) error {
-	// Read file content
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-
+// FlattenJSON flattens JSON data and returns key-value pairs
+func FlattenJSON(data []byte, namespace string) (map[string]string, error) {
 	// Parse JSON into interface{}
 	var result interface{}
 	if err := json.Unmarshal(data, &result); err != nil {
-		return fmt.Errorf("failed to parse JSON from file %s: %w", filePath, err)
+		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
 	// Determine prefix
@@ -28,13 +22,13 @@ func FlattenJSON(filePath, namespace string) error {
 	}
 
 	// Start recursive traversal and output
-	traverse(result, "", prefix)
-	return nil
+	flat := make(map[string]string)
+	traverse(result, "", prefix, flat)
+	return flat, nil
 }
 
-
 // traverse recursively traverses JSON structure and prints paths
-func traverse(data interface{}, path, prefix string) {
+func traverse(data interface{}, path, prefix string, result map[string]string) {
 	switch v := data.(type) {
 	case map[string]interface{}:
 		// Handle object (Map)
@@ -51,7 +45,7 @@ func traverse(data interface{}, path, prefix string) {
 			if path != "" {
 				newPath = path + "." + k
 			}
-			traverse(val, newPath, prefix)
+			traverse(val, newPath, prefix, result)
 		}
 
 	case []interface{}:
@@ -61,7 +55,7 @@ func traverse(data interface{}, path, prefix string) {
 			if path != "" {
 				newPath = path + "." + newPath
 			}
-			traverse(val, newPath, prefix)
+			traverse(val, newPath, prefix, result)
 		}
 
 	default:
@@ -73,7 +67,7 @@ func traverse(data interface{}, path, prefix string) {
 			fmt.Fprintf(os.Stderr, "Failed to format value: %v\n", err)
 			return
 		}
-		fmt.Printf("%s%s = %s\n", prefix, path, string(valBytes))
+		fullPath := prefix + path
+		result[fullPath] = string(valBytes)
 	}
 }
-

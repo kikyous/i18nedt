@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/alexflint/go-arg"
+	"github.com/kikyous/i18nedt/internal/doctor"
 	"github.com/kikyous/i18nedt/internal/editor"
 	"github.com/kikyous/i18nedt/internal/flatten"
 	"github.com/kikyous/i18nedt/internal/i18n"
@@ -24,6 +26,7 @@ var args struct {
 	Keys      []string `arg:"-k,--key,separate" help:"Key to edit (can be specified multiple times)"`
 	PrintOnly bool     `arg:"-p,--print" help:"Print temporary file content without launching editor"`
 	NoTips    bool     `arg:"-a,--no-tips,env" help:"Exclude AI tips from temporary file content"`
+	Doctor    bool     `arg:"-d,--doctor" help:"Check for missing and empty keys"`
 	Flatten   bool     `arg:"-f,--flatten" help:"Flatten JSON files to key=value format"`
 	Version   bool     `arg:"-v,--version" help:"Show version information"`
 	Files     []string `arg:"positional" help:"Target file paths [env: I18NEDT_FILES]"`
@@ -63,9 +66,16 @@ func main() {
 		PrintOnly: args.PrintOnly,
 		NoTips:    args.NoTips,
 		Flatten:   args.Flatten,
+		Doctor:    args.Doctor,
 	}
 	if config.Editor == "" {
 		config.Editor = "vim"
+	}
+
+	// Handle doctor mode
+	if config.Doctor {
+		runDoctor(sources, config.Flatten)
+		return
 	}
 
 	// Handle flatten mode
@@ -83,24 +93,50 @@ func main() {
 	runEditor(config, sources)
 }
 
-func runFlatten(sources []types.FileSource) {
-	// Flatten each file
-	for _, source := range sources {
-		var namespace string
-		// Determine namespace
-		if source.Pattern != "" {
-			_, ns, err := i18n.ExtractMetadataFromPath(source.Path, source.Pattern)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to extract metadata from %s: %v\n", source.Path, err)
-			} else {
-				namespace = ns
-			}
-		}
-		// If pattern is empty, namespace remains empty (non-ns mode)
+func runDoctor(sources []types.FileSource, simple bool) {
+	// Load all i18n files
+	files, err := i18n.LoadAllFiles(sources)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
+		os.Exit(1)
+	}
 
-		if err := flatten.FlattenJSON(source.Path, namespace); err != nil {
-			fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", source.Path, err)
+	foundIssues, err := doctor.Run(files, simple)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error running doctor check: %v\n", err)
+		os.Exit(1)
+	}
+
+	if foundIssues {
+		os.Exit(1)
+	}
+}
+
+func runFlatten(sources []types.FileSource) {
+	// Load all i18n files
+	files, err := i18n.LoadAllFiles(sources)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading files: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Flatten each file
+	for _, file := range files {
+		flat, err := flatten.FlattenJSON([]byte(file.Data), file.Namespace)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error flattening file %s: %v\n", file.Path, err)
 			os.Exit(1)
+		}
+
+		// Sort keys for consistent output
+		keys := make([]string, 0, len(flat))
+		for k := range flat {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			fmt.Printf("%s = %s\n", k, flat[k])
 		}
 	}
 }

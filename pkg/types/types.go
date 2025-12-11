@@ -35,6 +35,7 @@ type Config struct {
 	PrintOnly bool
 	NoTips    bool
 	Flatten   bool
+	Doctor    bool
 }
 
 // I18nFile represents a single i18n JSON file

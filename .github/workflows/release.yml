@@ -3,10 +3,10 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: "1.21"
 
 jobs:
   test:
@@ -69,21 +69,14 @@ jobs:
           OUTPUT_NAME="i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}"
 
           # Build with version info
-          go build -ldflags "-X github.com/kikyous/i18nedt/internal/cli.Version=${{ steps.version.outputs.VERSION }} -X github.com/kikyous/i18nedt/internal/cli.Commit=${{ steps.version.outputs.COMMIT }} -X github.com/kikyous/i18nedt/internal/cli.Date=${{ steps.version.outputs.DATE }}" -o "dist/$OUTPUT_NAME" cmd/i18nedt/main.go
-
-          # Create archives
-          if [ "$GOOS" = "windows" ]; then
-            cd dist && zip "../i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.zip" "$OUTPUT_NAME" && cd ..
-          else
-            tar -czf "i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" -C dist "$OUTPUT_NAME"
-          fi
+          go build -ldflags "-X main.Version=${{ steps.version.outputs.VERSION }} -X main.Commit=${{ steps.version.outputs.COMMIT }} -X main.Date=${{ steps.version.outputs.DATE }}" -o "dist/$OUTPUT_NAME" cmd/i18nedt/main.go
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
-            i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}.*
+            dist/i18nedt-${{ matrix.goos }}-${{ matrix.goarch }}*
           retention-days: 30
 
   release:
@@ -114,27 +107,26 @@ jobs:
             ## i18nedt ${{ steps.version.outputs.VERSION }}
 
             ### Downloads
-            - **Linux AMD64**: `i18nedt-linux-amd64.tar.gz`
-            - **Linux ARM64**: `i18nedt-linux-arm64.tar.gz`
-            - **macOS AMD64**: `i18nedt-darwin-amd64.tar.gz`
-            - **macOS ARM64 (Apple Silicon)**: `i18nedt-darwin-arm64.tar.gz`
-            - **Windows AMD64**: `i18nedt-windows-amd64.zip`
+            - **Linux AMD64**: `i18nedt-linux-amd64`
+            - **Linux ARM64**: `i18nedt-linux-arm64`
+            - **macOS AMD64**: `i18nedt-darwin-amd64`
+            - **macOS ARM64 (Apple Silicon)**: `i18nedt-darwin-arm64`
+            - **Windows AMD64**: `i18nedt-windows-amd64.exe`
 
             ### Installation
 
             **Linux/macOS:**
             ```bash
-            # Download and extract
-            curl -L -o i18nedt.tar.gz "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-$(uname | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/' | sed 's/arm64/arm64/').tar.gz"
-            tar -xzf i18nedt.tar.gz
+            # Download binary
+            curl -L -o i18nedt "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-$(uname | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/' | sed 's/arm64/arm64/')"
+            chmod +x i18nedt
             sudo mv i18nedt /usr/local/bin/
             ```
 
             **Windows:**
             ```powershell
-            # Download and extract
-            Invoke-WebRequest -Uri "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-windows-amd64.zip" -OutFile "i18nedt.zip"
-            Expand-Archive -Path "i18nedt.zip" -DestinationPath "."
+            # Download binary
+            Invoke-WebRequest -Uri "https://github.com/kikyous/i18nedt/releases/download/${{ steps.version.outputs.VERSION }}/i18nedt-windows-amd64.exe" -OutFile "i18nedt.exe"
             # Add to PATH or move to desired location
             ```
 
@@ -152,8 +144,7 @@ jobs:
 
             ${{ github.event.head_commit.message }}
           files: |
-            artifacts/**/*.tar.gz
-            artifacts/**/*.zip
+            artifacts/**/i18nedt-*
           draft: false
           prerelease: false
         env:
