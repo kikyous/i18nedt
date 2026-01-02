@@ -311,7 +311,8 @@ fi18n() {
      --bind 'enter:become:i18nedt $(printf -- "-k %s " {+1})' \
      --bind 'ctrl-o:execute:i18nedt $(printf -- "-k %s " {+1})' \
      --bind 'ctrl-x:become:i18nedt -k {q}' \
-     --delimiter = --preview 'i18nedt -p -a -k {1}' \
+     --bind 'ctrl-y:execute-silent(echo -n {1} | pbcopy)' \
+     --delimiter " = " --preview 'i18nedt -p -a -k {1}' \
      --preview-window '<80(up):wrap' --bind '?:toggle-preview'
 }
 ```
@@ -322,6 +323,7 @@ fi18n() {
 - `Tab`: Select multiple keys to edit together.
 - `Enter`: Edit selected key(s).
 - `Ctrl-x`: Create/Edit a new key using your search query.
+- `Ctrl-y`: Copy key to clipboard (macOS).
 - `?`: Toggle preview of values.
 
 ## Contributing
