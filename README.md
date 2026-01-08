@@ -10,6 +10,7 @@ It is specifically designed to be **AI-friendly**, making it effortless to gener
 
 - [Features](#features)
 - [Installation](#installation)
+    - [Using Homebrew (Recommended)](#using-homebrew-recommended)
     - [From Source (Recommended for developers)](#from-source-recommended-for-developers)
     - [Using Go Install](#using-go-install)
 - [Quick Start](#quick-start)
