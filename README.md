@@ -42,6 +42,12 @@ It is specifically designed to be **AI-friendly**, making it effortless to gener
 
 ## Installation
 
+### Using Homebrew (Recommended)
+
+```bash
+brew install kikyous/tap/i18nedt
+```
+
 ### From Source (Recommended for developers)
 
 ```bash
