@@ -1,0 +1,83 @@
+version: 2
+
+project_name: i18nedt
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/i18nedt
+    binary: i18nedt
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Commit={{.Commit}}
+      - -X main.Date={{.Date}}
+
+archives:
+  - format: tar.gz
+    # Use a friendly name template
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # Use zip for windows
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+brews:
+  - name: i18nedt
+    
+    # GitHub/GitLab repository to push the formula to
+    repository:
+      owner: kikyous
+      name: homebrew-tap
+      token: "{{ .Env.GH_PAT }}"
+    
+    # Git author used to commit to the repository.
+    commit_author:
+      name: kikyous
+      email: kikyous@users.noreply.github.com
+
+    # Folder inside the repository to put the formula.
+    directory: Formula
+
+    # Your app's homepage.
+    homepage: "https://github.com/kikyous/i18nedt"
+
+    # Template of your app's description.
+    description: "AI Ready i18n CLI Editor"
+
+    # SPDX identifier of your app's license.
+    license: "MIT"
+
+    # Test command
+    test: |
+      system "#{bin}/i18nedt", "--version"
+
+    # Install command
+    install: |
+      bin.install "i18nedt"
